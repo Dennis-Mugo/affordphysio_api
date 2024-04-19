@@ -1,0 +1,148 @@
+from django.http import JsonResponse
+from .models import AppAdmin, AdminUser
+from .serializers import AppAdminSerializer, UserSerializer, AdminUserSerializer
+
+from rest_framework.response import Response
+from rest_framework import status
+
+from rest_framework.authtoken.models import Token
+from django.contrib.auth.models import User
+from django.shortcuts import get_object_or_404
+
+
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
+
+from django.core.mail import send_mail
+
+@api_view(['GET', 'POST'])
+def admin_list(request):
+
+    #get all the admins
+    #serialize them
+    #return json
+    if request.method == 'GET':
+        admins = AppAdmin.objects.all()
+        serializer = AppAdminSerializer(admins, many=True)
+        return JsonResponse(serializer.data, safe=False)
+    
+    if request.method == 'POST':
+        serializer = AppAdminSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.
+            HTTP_201_CREATED)
+        
+
+@api_view(['POST'])
+def signup_verify(request):
+    data = request.data | {"username": request.data["email"], "password": "amref"}
+    is_resend = request.data["isResend"]
+    serializer = AdminUserSerializer(data=data)
+
+    if is_resend:
+        #Send email with link to take user to set password page
+        pass
+    
+    if serializer.is_valid():
+        serializer.save()
+        user = AdminUser.objects.get(email=request.data['email'])
+        # user.set_password("password")
+        # user.save()
+        token = Token.objects.create(user=user) 
+        return Response({'token': token.key, 'user': AdminUserSerializer(user).data}, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+@api_view(["POST"])
+def signup_set_password(request):
+    user_id = request.data["userId"]
+    user = AdminUser.objects.get(id=user_id)
+    user.set_password(request.data['password'])
+    user.save()
+    serializer = AdminUserSerializer(user)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+@api_view(["POST"])
+def forgot_password_send_email(request):
+    email = request.data["email"]
+    user = get_object_or_404(AdminUser, email=email)
+    # Send email with link to take them to forgot password page
+    send_mail(
+        'Subject',
+        'Here is the message.',
+        'dennismthairu@gmail.com',
+        ['dennis.mugo@strathmore.edu'],
+        fail_silently=False,
+    )
+    return Response({"success": True}, status=status.HTTP_200_OK)
+
+@api_view(["POST"])
+def reset_password(request):
+    email = request.data["email"]
+    new_password = request.data["password"]
+    user = get_object_or_404(AdminUser, email=email)
+    user.set_password(new_password)
+    user.save()
+    return Response({"success": True}, status=status.HTTP_200_OK)
+
+
+
+@api_view(["POST"])
+def login(request):
+    user = get_object_or_404(AdminUser, email=request.data['email'])
+    
+    if not user.check_password(request.data['password']):
+        return Response({"detail": "Email or password is incorrect"}, status=status.HTTP_404_NOT_FOUND)
+    token, created = Token.objects.get_or_create(user=user)
+    serializer = AdminUserSerializer(instance=user)
+    # user.set_password("password")
+    # user.save()
+    
+    return Response({'token': token.key, 'user': serializer.data}, status=status.HTTP_201_CREATED)
+
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def test_token(request):
+    return Response(f"Passed for {request.user.email}")
+
+
+@api_view(["POST"])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+
+@permission_classes([IsAuthenticated])
+
+def logout(request):
+    request.user.auth_token.delete()
+    return Response(status=status.HTTP_200_OK)
+
+@api_view(["GET", "PUT"])
+def get_admin_profile(request, adminId):
+    user = get_object_or_404(AdminUser, id=adminId)
+
+    if request.method == "GET":
+        serializer = AdminUserSerializer(instance=user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    elif request.method == "PUT":
+        serializer = AdminUserSerializer(user, request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["PIT"])
+def update_admin_profile(request, adminId):
+    user = get_object_or_404(AdminUser, id=adminId)
+    serializer = AdminUserSerializer(user, request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+    

@@ -52,3 +52,44 @@ class CreateManagerView(CreateAPIView):
                              "errors": {"exception": [f"${e}"]},
                              "data": None}
             return Response(response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class LoginManagerView(ObtainAuthToken):
+    model = Manager
+    # permission_classes = [
+    #     permissions.AllowAny  # Or anon users can't register
+    # ]
+    #serializer_class = ManagerSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data,
+                                           context={'request': request})
+        try:
+            serializer.is_valid(raise_exception=True)
+            user: Manager = serializer.validated_data['user']
+            token, created = Token.objects.get_or_create(user=user)
+            response_data = {"status": status.HTTP_200_OK,
+                             "status_description": "OK",
+                             "errors": None,
+                             "data": {
+                                 'auth_token': token.key,
+                                 'id': user.id,
+                                 'username': user.username,
+                                 "email": user.email,
+                                 "first_name": user.first_name,
+                                 "last_name": user.last_name,
+                             }}
+            return Response(response_data, status=status.HTTP_200_OK, )
+        except ValidationError as e:
+            response_data = {"status": status.HTTP_400_BAD_REQUEST,
+                             "status_description": "Bad request",
+                             "errors": e.detail,
+                             "data": None
+                             }
+            return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            response_data = {"status": status.HTTP_500_INTERNAL_SERVER_ERROR,
+                             "status_description": "Internal Error",
+                             "errors": {"exception": [f"${e}"]},
+                             "data": None}
+            return Response(response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

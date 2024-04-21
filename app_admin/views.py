@@ -43,7 +43,7 @@ def signup_verify(request):
     data = request.data | {"username": request.data["email"], "password": "amref"}
     is_resend = request.data["isResend"]
     serializer = AdminUserSerializer(data=data)
-    verify_link = get_email_verification_link()
+    verify_link = get_email_verification_link(request.data['email'])
     if is_resend:
         #User data is saved but user wants to resend verification email
         send_mail(
@@ -87,7 +87,7 @@ def forgot_password_send_email(request):
     email = request.data["email"]
     user = get_object_or_404(AdminUser, email=email)
     # Send email with link to take them to forgot password page
-    password_change_link = get_password_reset_link()
+    password_change_link = get_password_reset_link(email)
     send_mail(
         'Afford Physio Password Reset',
         f'Follow the link below to change your password\n\n{password_change_link}\n\n The link expires in 10 minutes.',

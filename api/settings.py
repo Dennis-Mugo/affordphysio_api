@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'api',
     'app_admin',
+    'patient',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

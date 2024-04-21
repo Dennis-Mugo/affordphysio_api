@@ -14,9 +14,9 @@ from manager.models import Manager
 # Create your views here.
 class CreateManagerView(CreateAPIView):
     model = Manager
-    permission_classes = [
-        permissions.AllowAny  # Or anon users can't register
-    ]
+    # permission_classes = [
+    #     permissions.AllowAny  # Or anon users can't register
+    # ]
     serializer_class = ManagerSerializer
 
     def create(self, request, *args, **kwargs):
@@ -29,7 +29,7 @@ class CreateManagerView(CreateAPIView):
             token, created = Token.objects.get_or_create(user=serializer.instance)
             response_data = {"status": status.HTTP_201_CREATED,
                              "status_description": "CREATED",
-                             "errors": {},
+                             "errors": None,
                              "data": {'auth_token': token.key,
                                       "id": serializer.data["id"],
                                       'username': serializer.data["username"],
@@ -41,12 +41,14 @@ class CreateManagerView(CreateAPIView):
             return Response(response_data,
                             status=status.HTTP_201_CREATED, headers=headers)
         except ValidationError as e:
-            response_data = {"status": status.HTTP_400_BAD_REQUEST, "status_description": "Bad request",
+            response_data = {"status": status.HTTP_400_BAD_REQUEST,
+                             "status_description": "Bad request",
                              "errors": e.detail,
-                             "data": {}}
+                             "data": None}
             return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            response_data = {"status": status.HTTP_400_BAD_REQUEST, "status_description": "Bad request",
+            response_data = {"status": status.HTTP_400_BAD_REQUEST,
+                             "status_description": "Bad request",
                              "errors": {"exception": [f"${e}"]},
-                             "data": {}}
+                             "data": None}
             return Response(response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -1,5 +1,7 @@
 from django.http import JsonResponse
 from .models import Patient
+from app_admin.models import EmailToken
+from app_admin.serializers import EmailTokenSerializer
 from .serializers import PatientSerializer
 from .service import get_email_verification_link, get_password_reset_link
 
@@ -53,3 +55,94 @@ def signup_verify(request):
         return Response({'token': token.key, 'user': PatientSerializer(user).data}, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(["POST"])
+def signup_set_password(request):
+    email = request.data["email"]
+    user = get_object_or_404(Patient, email=email)
+    user.set_password(request.data['password'])
+    user.save()
+    serializer = PatientSerializer(user)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+@api_view(["POST"])
+def forgot_password_send_email(request):
+    email = request.data["email"]
+    user = get_object_or_404(Patient, email=email)
+    # Send email with link to take them to forgot password page
+    password_change_link = get_password_reset_link(email)
+    send_mail(
+        'Afford Physio Password Reset',
+        f'Follow the link below to change your password\n\n{password_change_link}\n\n The link expires in 10 minutes.',
+        'dennismthairu@gmail.com',
+        [email],
+        fail_silently=False,
+    )
+    return Response({"success": True}, status=status.HTTP_200_OK)
+
+@api_view(["POST"])
+def reset_password(request):
+    email = request.data["email"]
+    new_password = request.data["password"]
+    user = get_object_or_404(Patient, email=email)
+    user.set_password(new_password)
+    user.save()
+    return Response({"success": True}, status=status.HTTP_200_OK)
+
+@api_view(["POST"])
+def login(request):
+    user = get_object_or_404(Patient, email=request.data['email'])
+    
+    if not user.check_password(request.data['password']):
+        return Response({"detail": "Email or password is incorrect"}, status=status.HTTP_404_NOT_FOUND)
+    token, created = Token.objects.get_or_create(user=user)
+    serializer = PatientSerializer(instance=user)
+    
+    
+    return Response({'token': token.key, 'user': serializer.data}, status=status.HTTP_201_CREATED)
+
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def test_token(request):
+    return Response(f"Passed for {request.user.email}")
+
+
+@api_view(["POST"])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+
+@permission_classes([IsAuthenticated])
+
+def logout(request):
+    request.user.auth_token.delete()
+    return Response({"success": True}, status=status.HTTP_200_OK)
+
+@api_view(["GET", "PUT"])
+def patient_profile(request, patientId):
+    user = get_object_or_404(Patient, id=patientId)
+
+    if request.method == "GET":
+        serializer = PatientSerializer(instance=user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    elif request.method == "PUT":
+        serializer = PatientSerializer(user, request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(["GET"])
+def verify_email_token(request, tokenId):
+    token = get_object_or_404(EmailToken, id=tokenId)
+    serializer = EmailTokenSerializer(token)
+    date_created = serializer.data['date_created']
+
+    dt_created = datetime.datetime.fromisoformat(date_created.replace('Z', '+00:00'))
+
+    epoch_created_seconds = dt_created.timestamp()
+    now_epoch_seconds = int(time.time())
+    
+    token_expiry_duration = 10 * 60 #Token expires in 10 minutes
+    token_valid = now_epoch_seconds - epoch_created_seconds < token_expiry_duration
+
+    return Response({"valid": token_valid}, status=status.HTTP_200_OK)

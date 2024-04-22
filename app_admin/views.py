@@ -75,8 +75,8 @@ def signup_verify(request):
 
 @api_view(["POST"])
 def signup_set_password(request):
-    user_id = request.data["userId"]
-    user = AdminUser.objects.get(id=user_id)
+    email = request.data["email"]
+    user = AdminUser.objects.get(email=email)
     user.set_password(request.data['password'])
     user.save()
     serializer = AdminUserSerializer(user)
@@ -153,14 +153,14 @@ def get_admin_profile(request, adminId):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(["PIT"])
-def update_admin_profile(request, adminId):
-    user = get_object_or_404(AdminUser, id=adminId)
-    serializer = AdminUserSerializer(user, request.data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+# @api_view(["PUT"])
+# def update_admin_profile(request, adminId):
+#     user = get_object_or_404(AdminUser, id=adminId)
+#     serializer = AdminUserSerializer(user, request.data)
+#     if serializer.is_valid():
+#         serializer.save()
+#         return Response(serializer.data, status=status.HTTP_201_CREATED)
+#     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(["GET"])
 def verify_email_token(request, tokenId):

@@ -1,3 +1,6 @@
+import json
+from typing import Dict
+
 import django.http
 from django.contrib.auth import get_user_model
 from django.shortcuts import render
@@ -111,7 +114,7 @@ def get_physiotherapist_for_manager_inner(request: django.http.HttpRequest):
     manager: Manager = Manager.objects.get(id=user.id)
     # get the physiotherapists that the manager created
     physiotherapist = Physiotherapist.objects.filter(created_by=manager)
-    serializer = PhysioSerializer(many=True, data=physiotherapist,show_created_by=False)
+    serializer = PhysioSerializer(many=True, data=physiotherapist, show_created_by=False)
     serializer.show_created_by = False
     serializer.is_valid()
     return Response({"status": status.HTTP_200_OK,
@@ -156,3 +159,34 @@ def add_physiotherapist(request: django.http.HttpRequest):
 @permission_classes([IsAuthenticated])
 def get_physiotherapists_for_manager(request: django.http.HttpRequest):
     return make_request(request, get_physiotherapist_for_manager_inner)
+
+
+def update_physio_status_inner(request: django.http.HttpRequest):
+    # data
+    json_data: Dict = json.loads(request.body)
+    # ensure the data exists in response, and act appropriately
+    assert ("id" in json_data)
+    assert ("status" in json_data)
+    # the currently logged in user
+    user: User = request.user
+    # check if the user is a manager, if the get fails
+    # this means the user is not a manager
+    manager: Manager = Manager.objects.get(id=user.id)
+
+    physiotherapist: Physiotherapist = Physiotherapist.objects.get(id=json_data["id"], created_by=manager)
+    physiotherapist.is_active = json_data["status"]
+    physiotherapist.save()
+    physio_serializer = PhysioSerializer(data=physiotherapist, many=False)
+    physio_serializer.is_valid()
+    return Response({"status": status.HTTP_200_OK,
+                     "status_description": "OK",
+                     "errors": None,
+                     "data": physio_serializer.data},
+                    status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def update_physio_status(request: django.http.HttpRequest):
+    return make_request(request, update_physio_status_inner)

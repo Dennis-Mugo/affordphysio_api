@@ -39,7 +39,7 @@ class PhysioSerializer(serializers.ModelSerializer):
 
     show_created_by = True
 
-    def __init__(self, show_created_by: bool, **kwargs):
+    def __init__(self, show_created_by: bool = True, **kwargs):
         """
         Initialize serializer with arguments
 
@@ -51,7 +51,7 @@ class PhysioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Physiotherapist
         fields = ("id", "username", "email", "password", "first_name", "last_name", "created_date", "modified_date",
-                  "created_by")
+                  "created_by", "is_active", "last_login")
         write_only_fields = ("password",)
         read_only_fields = ("id", "created_date", "modified_date",)
 

@@ -1,3 +1,4 @@
+import django.http
 from django.contrib.auth import get_user_model
 from django.shortcuts import render
 from rest_framework import status, permissions
@@ -25,7 +26,7 @@ class CreateManagerView(CreateAPIView):
     serializer_class = ManagerSerializer
 
     def create(self, request, *args, **kwargs):
-        def make_signup_internal(request):
+        def make_signup_internal(request: django.http.HttpRequest):
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             self.perform_create(serializer)
@@ -46,7 +47,7 @@ class CreateManagerView(CreateAPIView):
             return Response(response_data,
                             status=status.HTTP_201_CREATED, headers=headers)
 
-        return make_request(request,make_signup_internal)
+        return make_request(request, make_signup_internal)
 
 
 class LoginManagerView(ObtainAuthToken):
@@ -81,7 +82,7 @@ class LoginManagerView(ObtainAuthToken):
         return make_request(request, make_login_internal)
 
 
-def add_physiotherapist_inner(request):
+def add_physiotherapist_inner(request: django.http.HttpRequest):
     # the currently logged in user
     user: User = request.user
     # check if the user is a manager, if the get fails
@@ -99,7 +100,28 @@ def add_physiotherapist_inner(request):
                     status=status.HTTP_200_OK)
 
 
-def make_request(request, function):
+def get_physiotherapist_for_manager_inner(request: django.http.HttpRequest):
+    """
+    Get all the physiotherapist a manager added
+    """
+    # the currently logged in user
+    user: User = request.user
+    # check if the user is a manager, if the get fails
+    # this means the user is not a manager
+    manager: Manager = Manager.objects.get(id=user.id)
+    # get the physiotherapists that the manager created
+    physiotherapist = Physiotherapist.objects.filter(created_by=manager)
+    serializer = PhysioSerializer(many=True, data=physiotherapist,show_created_by=False)
+    serializer.show_created_by = False
+    serializer.is_valid()
+    return Response({"status": status.HTTP_200_OK,
+                     "status_description": "OK",
+                     "errors": None,
+                     "data": serializer.data},
+                    status=status.HTTP_200_OK)
+
+
+def make_request(request: django.http.HttpRequest, function):
     """
     Make requests makes an internal request handling errors for me
 
@@ -115,8 +137,8 @@ def make_request(request, function):
                          "data": None}
         return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
-        response_data = {"status": status.HTTP_400_BAD_REQUEST,
-                         "status_description": "Bad request",
+        response_data = {"status": status.HTTP_500_INTERNAL_SERVER_ERROR,
+                         "status_description": "Internal server error",
                          "errors": {"exception": [f"${e}"]},
                          "data": None}
         return Response(response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -125,5 +147,12 @@ def make_request(request, function):
 @api_view(['POST'])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
-def add_physiotherapist(request):
+def add_physiotherapist(request: django.http.HttpRequest):
     return make_request(request, add_physiotherapist_inner)
+
+
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def get_physiotherapists_for_manager(request: django.http.HttpRequest):
+    return make_request(request, get_physiotherapist_for_manager_inner)

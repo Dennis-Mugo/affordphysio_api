@@ -29,7 +29,24 @@ class ManagerSerializer(serializers.ModelSerializer):
 
 
 class PhysioSerializer(serializers.ModelSerializer):
+    """
+    Physiotherapy serializer.
+
+    This is present in this module to allow a
+    manager to see and manipulate physiotherapist.
+    """
     created_by = ManagerSerializer(many=False, read_only=True)
+
+    show_created_by = True
+
+    def __init__(self, show_created_by: bool, **kwargs):
+        """
+        Initialize serializer with arguments
+
+        param: show_created_by: Influences if we are going to show `created_by` field
+        """
+        super().__init__(**kwargs)
+        self.show_created_by = show_created_by
 
     class Meta:
         model = Physiotherapist
@@ -53,4 +70,6 @@ class PhysioSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         response = super().to_representation(instance)
         response.pop("password", None)
+        if not self.show_created_by:
+            response.pop("created_by")
         return response

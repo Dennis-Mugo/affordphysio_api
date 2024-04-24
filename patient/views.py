@@ -1,9 +1,9 @@
 from django.http import JsonResponse
-from .models import Patient
+from .models import Patient, PatientFeedback
 from app_admin.models import EmailToken
 from app_admin.serializers import EmailTokenSerializer
-from .serializers import PatientSerializer
-from .service import get_email_verification_link, get_password_reset_link
+from .serializers import PatientSerializer, PatientFeedbackSerializer
+from .service import get_email_verification_link, get_password_reset_link, add_patient_log
 
 from rest_framework.response import Response
 from rest_framework import status
@@ -96,6 +96,11 @@ def login(request):
         return Response({"detail": "Email or password is incorrect"}, status=status.HTTP_404_NOT_FOUND)
     token, created = Token.objects.get_or_create(user=user)
     serializer = PatientSerializer(instance=user)
+
+    log = add_patient_log("Logged in", user)
+    if log != True:
+        print(log)
+        return Response(log, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     
     return Response({'token': token.key, 'user': serializer.data}, status=status.HTTP_201_CREATED)
@@ -114,6 +119,10 @@ def test_token(request):
 
 def logout(request):
     request.user.auth_token.delete()
+    log = add_patient_log("Logged out", request.user)
+    if log != True:
+        print(log)
+        return Response(log, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     return Response({"success": True}, status=status.HTTP_200_OK)
 
 @api_view(["GET", "PUT"])
@@ -146,3 +155,26 @@ def verify_email_token(request, tokenId):
     token_valid = now_epoch_seconds - epoch_created_seconds < token_expiry_duration
 
     return Response({"valid": token_valid}, status=status.HTTP_200_OK)
+
+@api_view(["POST"])
+def add_feedback(request):
+    data = request.data
+    data_obj = {
+        "patient": get_object_or_404(Patient, id=data["patientId"]),
+        "comments": data['comments'],
+        "rating": data["rating"],
+        "timestamp": datetime.datetime.fromtimestamp(data["timestamp"])  
+    }
+    serializer = PatientFeedbackSerializer(data=data_obj)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({"success": True}, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(["POST"])
+def get_feedback(request):
+    patient_id = request.data["patientId"]
+    patient = get_object_or_404(Patient, id=patient_id)
+    feedback_list = PatientFeedback.objects.filter(patient=patient)
+    serializer = PatientFeedbackSerializer(feedback_list, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)

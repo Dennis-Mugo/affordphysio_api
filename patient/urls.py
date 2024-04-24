@@ -12,4 +12,8 @@ urlpatterns = [
     path('verify_email_token/<str:tokenId>', views.verify_email_token),
     path('profile/<int:patientId>', views.patient_profile),
     path('logout', views.logout),
+
+    path('add_feedback', views.add_feedback),
+    path("get_feedback", views.get_feedback)
 ]
+

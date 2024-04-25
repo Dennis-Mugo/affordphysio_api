@@ -107,7 +107,7 @@ def get_physiotherapist_for_manager_inner(request: django.http.HttpRequest):
     """
     Get all the physiotherapist a manager added
     """
-    # the currently logged in user
+    # the currently logged-in user
     user: User = request.user
     # check if the user is a manager, if the get fails
     # this means the user is not a manager
@@ -167,7 +167,7 @@ def update_physio_status_inner(request: django.http.HttpRequest):
     # ensure the data exists in response, and act appropriately
     assert ("id" in json_data)
     assert ("status" in json_data)
-    # the currently logged in user
+    # the currently logged-in user
     user: User = request.user
     # check if the user is a manager, if the get fails
     # this means the user is not a manager
@@ -176,12 +176,13 @@ def update_physio_status_inner(request: django.http.HttpRequest):
     physiotherapist: Physiotherapist = Physiotherapist.objects.get(id=json_data["id"], created_by=manager)
     physiotherapist.is_active = json_data["status"]
     physiotherapist.save()
-    physio_serializer = PhysioSerializer(data=physiotherapist, many=False)
+    physio_serializer = PhysioSerializer(data=[physiotherapist], many=True)
     physio_serializer.is_valid()
     return Response({"status": status.HTTP_200_OK,
                      "status_description": "OK",
                      "errors": None,
-                     "data": physio_serializer.data},
+                     "data": physio_serializer.data[0]  # Return the first element.
+                     },
                     status=status.HTTP_200_OK)
 
 

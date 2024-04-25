@@ -51,3 +51,18 @@ class PatientFeedback(models.Model):
 
     def __str__(self):
         return self.patient.email + " " + self.comments[:10]
+    
+
+class Appointment(models.Model):
+    id = models.UUIDField( 
+         primary_key = True, 
+         default = uuid.uuid4, 
+         editable = False)
+    timestamp = models.DateTimeField(null=True)
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
+    # physiotherapist = models.ForeignKey()
+    status = models.CharField(null=True, max_length=50)
+    appointment_type = models.CharField(null=True, max_length=50)
+
+    def __str__(self):
+        return self.patient.first_name + " " + self.status

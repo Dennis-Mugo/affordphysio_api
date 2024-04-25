@@ -176,6 +176,11 @@ def update_physio_status_inner(request: django.http.HttpRequest):
     physiotherapist: Physiotherapist = Physiotherapist.objects.get(id=json_data["id"], created_by=manager)
     physiotherapist.is_active = json_data["status"]
     physiotherapist.save()
+    # Django won't allow serialization to work for some strange reason
+    # if we set the serializer to be many=False and pass physiotherapist
+    # So for now, we set many=True and pass a single physiotherapist instance
+    #
+    # Todo(cae): Why???
     physio_serializer = PhysioSerializer(data=[physiotherapist], many=True)
     physio_serializer.is_valid()
     return Response({"status": status.HTTP_200_OK,

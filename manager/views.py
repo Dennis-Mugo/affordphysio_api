@@ -15,7 +15,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 
-from manager.app_serializers import ManagerSerializer, PhysioSerializer
+from manager.app_serializers import ManagerSerializer, PhysioSerializerInManagerModule
 from manager.models import Manager
 from physiotherapist.models import Physiotherapist
 
@@ -69,6 +69,9 @@ class LoginManagerView(ObtainAuthToken):
             serializer.is_valid(raise_exception=True)
             user: Manager = serializer.validated_data['user']
             token, created = Token.objects.get_or_create(user=user)
+            # confirm a manager with the details is present
+            Manager.objects.get(id=user.id)
+
             response_data = {"status": status.HTTP_200_OK,
                              "status_description": "OK",
                              "errors": None,
@@ -91,7 +94,7 @@ def add_physiotherapist_inner(request: django.http.HttpRequest):
     # check if the user is a manager, if the get fails
     # this means the user is not a manager
     manager: Manager = Manager.objects.get(id=user.id)
-    serializer = PhysioSerializer(data=request.data)
+    serializer = PhysioSerializerInManagerModule(data=request.data)
     serializer.created_by = manager
     serializer.is_valid(raise_exception=True)
     serializer.save()
@@ -114,7 +117,7 @@ def get_physiotherapist_for_manager_inner(request: django.http.HttpRequest):
     manager: Manager = Manager.objects.get(id=user.id)
     # get the physiotherapists that the manager created
     physiotherapist = Physiotherapist.objects.filter(created_by=manager)
-    serializer = PhysioSerializer(many=True, data=physiotherapist, show_created_by=False)
+    serializer = PhysioSerializerInManagerModule(many=True, data=physiotherapist, show_created_by=False)
     serializer.show_created_by = False
     serializer.is_valid()
     return Response({"status": status.HTTP_200_OK,
@@ -181,7 +184,7 @@ def update_physio_status_inner(request: django.http.HttpRequest):
     # So for now, we set many=True and pass a single physiotherapist instance
     #
     # Todo(cae): Why???
-    physio_serializer = PhysioSerializer(data=[physiotherapist], many=True)
+    physio_serializer = PhysioSerializerInManagerModule(data=[physiotherapist], many=True)
     physio_serializer.is_valid()
     return Response({"status": status.HTTP_200_OK,
                      "status_description": "OK",

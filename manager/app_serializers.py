@@ -28,7 +28,7 @@ class ManagerSerializer(serializers.ModelSerializer):
         return response
 
 
-class PhysioSerializer(serializers.ModelSerializer):
+class PhysioSerializerInManagerModule(serializers.ModelSerializer):
     """
     Physiotherapy serializer.
 

@@ -14,6 +14,8 @@ urlpatterns = [
     path('logout', views.logout),
 
     path('add_feedback', views.add_feedback),
-    path("get_feedback", views.get_feedback)
+    path("get_feedback", views.get_feedback),
+
+    path("appointments", views.appointments)
 ]
 

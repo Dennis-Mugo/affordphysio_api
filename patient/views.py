@@ -1,8 +1,8 @@
 from django.http import JsonResponse
-from .models import Patient, PatientFeedback
+from .models import Patient, PatientFeedback, Appointment
 from app_admin.models import EmailToken
 from app_admin.serializers import EmailTokenSerializer
-from .serializers import PatientSerializer, PatientFeedbackSerializer
+from .serializers import PatientSerializer, PatientFeedbackSerializer, AppointmentSerializer
 from .service import get_email_verification_link, get_password_reset_link, add_patient_log
 
 from rest_framework.response import Response
@@ -178,3 +178,37 @@ def get_feedback(request):
     feedback_list = PatientFeedback.objects.filter(patient=patient)
     serializer = PatientFeedbackSerializer(feedback_list, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(["PUT","POST", "PATCH"])
+def appointments(request):
+    if request.method == "PUT":
+        data = request.data
+        patient = get_object_or_404(Patient, id=data["patientId"])
+        obj = {
+            "patient": patient,
+            "timestamp": datetime.datetime.fromtimestamp(data["timestamp"]),
+            "status": data["status"],
+            "appointment_type": data["appointmentType"]
+        }
+        serializer = AppointmentSerializer(data=obj)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    elif request.method == "POST":
+        patient = get_object_or_404(Patient, id=request.data["patientId"])
+        appointments = Appointment.objects.filter(patient=patient)
+        serializer = AppointmentSerializer(appointments, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    elif request.method == "PATCH":
+        patient_id = request.data["patientId"]
+        appointment_id = request.data["appointmentId"]
+        appointment = get_object_or_404(Appointment, id=appointment_id)
+        serializer = AppointmentSerializer(appointment, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    

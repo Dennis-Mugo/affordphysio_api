@@ -54,10 +54,10 @@ class PatientFeedback(models.Model):
     
 
 class Appointment(models.Model):
-    id = models.UUIDField( 
-         primary_key = True, 
-         default = uuid.uuid4, 
-         editable = False)
+    # id = models.UUIDField( 
+    #      primary_key = True, 
+    #      default = uuid.uuid4, 
+    #      editable = False)
     timestamp = models.DateTimeField(null=True)
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
     # physiotherapist = models.ForeignKey()
@@ -66,3 +66,11 @@ class Appointment(models.Model):
 
     def __str__(self):
         return self.patient.first_name + " " + self.status
+
+
+class AppointmentCancellation(models.Model):
+    timestamp = models.DateTimeField(null=True)
+    appointment = models.ForeignKey(Appointment, on_delete=models.CASCADE)
+    reason = models.TextField(null=True)
+
+    

@@ -30,3 +30,4 @@ def add_patient_log(activity, patient):
         serializer.save()
         return True
     return serializer.errors
+

@@ -13,5 +13,10 @@ urlpatterns = [
     path('verify_email_token/<str:tokenId>', views.verify_email_token),
     path('profile/<int:adminId>', views.get_admin_profile),
     path('logout', views.logout),
+
+    path('add_manager', views.add_manager),
+    path("remove_manager/<int:managerId>", views.remove_manager),
+    path("view_managers", views.view_managers),
+    path("view_removed_managers", views.view_removed_managers),
     
 ]

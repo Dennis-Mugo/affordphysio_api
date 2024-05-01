@@ -1,7 +1,9 @@
 from django.http import JsonResponse
 from .models import AppAdmin, AdminUser, EmailToken
 from .serializers import AppAdminSerializer, UserSerializer, AdminUserSerializer, EmailTokenSerializer
-from .service import get_email_verification_link, get_password_reset_link
+from manager.app_serializers import ManagerSerializer
+from manager.models import Manager
+from .service import get_email_verification_link, get_password_reset_link, get_manager_email_verification_link
 
 from rest_framework.response import Response
 from rest_framework import status
@@ -177,6 +179,50 @@ def verify_email_token(request, tokenId):
     token_valid = now_epoch_seconds - epoch_created_seconds < token_expiry_duration
 
     return Response({"valid": token_valid}, status=status.HTTP_200_OK)
+
+@api_view(["POST"])
+def add_manager(request):
+    data_obj = {
+        "email": request.data["email"],
+        "first_name": request.data["first_name"],
+        "last_name": request.data["last_name"],
+        "username": request.data["email"],
+        "password": "amref"
+    }
+    serializer = ManagerSerializer(data=data_obj)
+    if serializer.is_valid():
+        serializer.save()
+        verify_link = get_manager_email_verification_link(request.data['email'])
+    
+        send_mail(
+            'Afford Physio Email verification',
+            f'Follow the link below to complete signing up\n\n{verify_link}\n\n The link expires in 10 minutes.',
+            'dennismthairu@gmail.com', 
+            [data_obj['email']],
+            fail_silently=False,
+        )
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(["GET"])
+def remove_manager(request, managerId):
+    manager = get_object_or_404(Manager, id=managerId)
+    manager.is_active = False
+    manager.save()
+    return Response({"success": True}, status=status.HTTP_200_OK)
+
+@api_view(["GET"])
+def view_managers(request):
+    managers = Manager.objects.filter(is_active=True)
+    serializer = ManagerSerializer(managers, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(["GET"])
+def view_removed_managers(request):
+    managers = Manager.objects.filter(is_active=False)
+    serializer = ManagerSerializer(managers, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 
 

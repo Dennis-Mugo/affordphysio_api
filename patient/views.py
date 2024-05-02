@@ -2,7 +2,7 @@ from django.http import JsonResponse
 from .models import Patient, PatientFeedback, Appointment
 from app_admin.models import EmailToken
 from app_admin.serializers import EmailTokenSerializer
-from .serializers import PatientSerializer, PatientFeedbackSerializer, AppointmentSerializer, AppointmentCancellationSerializer
+from .serializers import PatientSerializer, PatientFeedbackSerializer, AppointmentSerializer, AppointmentCancellationSerializer, PenaltySerializer
 from .service import get_email_verification_link, get_password_reset_link, add_patient_log
 
 from rest_framework.response import Response
@@ -225,16 +225,26 @@ def cancel_appointment(request):
     now_epoch_seconds = int(time.time())
 
     appointment_cancel_duration = 6 * 60 * 60 #Appointment can only be cancelled more than 6 hours prior
-    cancellable = epoch_scheduled_seconds - now_epoch_seconds >= appointment_cancel_duration
+    is_penalty = epoch_scheduled_seconds - now_epoch_seconds < appointment_cancel_duration
 
-    if not cancellable:
-        return Response({"message": "You will be fined 30%"}, status=status.HTTP_200_OK)
+    if is_penalty:
+        serializer = PenaltySerializer(data={
+            "penalty_type": "early_cancellation",
+            "duration": epoch_scheduled_seconds - now_epoch_seconds,
+            "fine_percentage": 30
+        })
+        if serializer.is_valid():
+            serializer.save()
+            
 
-    serializer = AppointmentCancellationSerializer(data={
+    cancel_obj = {
         "timestamp": datetime.datetime.fromtimestamp(data["timestamp"]),
         "reason": data["reason"],
         "appointment": data["appointmentId"]
-    })
+    }
+    if is_penalty:
+        cancel_obj["penalty"] = serializer.data["id"] 
+    serializer = AppointmentCancellationSerializer(data=cancel_obj)
 
     if serializer.is_valid():
         serializer.save()
@@ -245,7 +255,9 @@ def cancel_appointment(request):
 
     if serializer.is_valid():
         serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        obj = serializer.data
+        if is_penalty: obj["penalty"] = 30
+        return Response(obj, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     

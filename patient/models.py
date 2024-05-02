@@ -67,10 +67,18 @@ class Appointment(models.Model):
     def __str__(self):
         return self.patient.first_name + " " + self.status
 
+class Penalty(models.Model):
+    penalty_type = models.CharField(null=True, max_length=50)
+    fine_percentage = models.IntegerField(null=True)
+    duration = models.BigIntegerField(null=True)
+    #Duration in seconds before the appointment/duration in seconds that the physio is late
 
 class AppointmentCancellation(models.Model):
     timestamp = models.DateTimeField(null=True)
     appointment = models.ForeignKey(Appointment, on_delete=models.CASCADE)
     reason = models.TextField(null=True)
+    penalty = models.ForeignKey(Penalty, on_delete=models.CASCADE, null=True)
+
+
 
     

@@ -18,5 +18,15 @@ urlpatterns = [
     path("remove_manager/<int:managerId>", views.remove_manager),
     path("view_managers", views.view_managers),
     path("view_removed_managers", views.view_removed_managers),
+
+
+    path("services_provided", views.services_provided),
+    path("delete_service_provided/<int:service_id>", views.delete_service_provided),
+    path("update_service_provided/<int:service_id>", views.update_service_provided),
+
+    path("education_resources", views.ed_resource),
+    path("delete_education_resource/<int:resource_id>", views.delete_ed_resource),
+    path("update_education_resource/<int:resource_id>", views.update_ed_resource),
+
     
 ]

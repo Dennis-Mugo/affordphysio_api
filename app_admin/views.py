@@ -1,6 +1,6 @@
 from django.http import JsonResponse
-from .models import AppAdmin, AdminUser, EmailToken
-from .serializers import AppAdminSerializer, UserSerializer, AdminUserSerializer, EmailTokenSerializer
+from .models import AppAdmin, AdminUser, EmailToken, EducationResource, ServiceProvided
+from .serializers import AppAdminSerializer, UserSerializer, AdminUserSerializer, EmailTokenSerializer, EdResourceSerializer, ServiceSerializer
 from manager.app_serializers import ManagerSerializer
 from manager.models import Manager
 from .service import get_email_verification_link, get_password_reset_link, get_manager_email_verification_link
@@ -222,6 +222,73 @@ def view_removed_managers(request):
     managers = Manager.objects.filter(is_active=False)
     serializer = ManagerSerializer(managers, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET", "POST"])
+def services_provided(request):
+    data = request.data
+    if request.method == "GET":
+        services = ServiceProvided.objects.all()
+        serializer = ServiceSerializer(services, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    elif request.method == "POST":
+        serializer = ServiceSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+   
+    
+@api_view(["DELETE"])
+def delete_service_provided(request, service_id):
+    service = get_object_or_404(ServiceProvided, id=service_id)
+    service.delete()
+    return Response({"success": True}, status=status.HTTP_204_NO_CONTENT)
+
+@api_view(["PUT"])
+def update_service_provided(request, service_id):
+    service = get_object_or_404(ServiceProvided, id=service_id)
+    serializer = ServiceSerializer(service, data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(["GET", "POST"])
+def ed_resource(request):
+    data = request.data
+    if request.method == "GET":
+        resources = EducationResource.objects.all()
+        serializer = EdResourceSerializer(resources, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    elif request.method == "POST":
+        serializer = EdResourceSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+   
+    
+@api_view(["DELETE"])
+def delete_ed_resource(request, resource_id):
+    resource = get_object_or_404(EducationResource, id=resource_id)
+    resource.delete()
+    return Response({"success": True}, status=status.HTTP_204_NO_CONTENT)
+
+@api_view(["PUT"])
+def update_ed_resource(request, resource_id):
+    resource = get_object_or_404(EducationResource, id=resource_id)
+    serializer = EdResourceSerializer(resource, data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    
 
 
 

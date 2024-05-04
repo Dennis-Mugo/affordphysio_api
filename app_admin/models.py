@@ -31,6 +31,16 @@ class EmailToken(models.Model):
          editable = False)
     date_created = models.DateTimeField(auto_now_add=True)
 
+class ServiceProvided(models.Model):
+    service_type = models.CharField(null=True, max_length=100)
+    amount_charged = models.IntegerField(null=True)
+
+class EducationResource(models.Model):
+    title = models.CharField(max_length=100, null=True)
+    description = models.TextField(null=True)
+    resource_type = models.CharField(null=True, max_length=50)
+    url = models.CharField(null=True, max_length=100)
+
     
     
     

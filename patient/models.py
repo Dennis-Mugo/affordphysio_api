@@ -18,8 +18,8 @@ class Patient(User):
     marital_status = models.CharField(max_length=30, null=True)
     religion = models.CharField(max_length=50, null=True)
     education = models.TextField(null=True)
-    chronic_disease_history = models.TextField(null=True)
     occupation = models.CharField(max_length=50, null=True)
+    chronic_disease_history = models.TextField(null=True)
     hobby = models.CharField(max_length=50, null=True)
 
     def __str__(self):
@@ -63,6 +63,8 @@ class Appointment(models.Model):
     # physiotherapist = models.ForeignKey()
     status = models.CharField(null=True, max_length=50)
     appointment_type = models.CharField(null=True, max_length=50)
+    created_date = models.DateTimeField(auto_now_add=True)
+    modified_date = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.patient.first_name + " " + self.status
@@ -78,6 +80,9 @@ class AppointmentCancellation(models.Model):
     appointment = models.ForeignKey(Appointment, on_delete=models.CASCADE)
     reason = models.TextField(null=True)
     penalty = models.ForeignKey(Penalty, on_delete=models.CASCADE, null=True)
+
+
+
 
 
 

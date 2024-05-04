@@ -31,3 +31,5 @@ class PenaltySerializer(serializers.ModelSerializer):
     class Meta:
         model = Penalty
         exclude = []
+
+

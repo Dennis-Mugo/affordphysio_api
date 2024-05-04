@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import AppAdmin, AdminUser, EmailToken
+from .models import AppAdmin, AdminUser, EmailToken, ServiceProvided, EducationResource
 from django.contrib.auth.models import User
 
 
@@ -24,3 +24,13 @@ class EmailTokenSerializer(serializers.ModelSerializer):
     class Meta:
         model = EmailToken
         fields = ['id', 'date_created']
+
+class ServiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ServiceProvided
+        exclude = []
+
+class EdResourceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EducationResource
+        exclude = []

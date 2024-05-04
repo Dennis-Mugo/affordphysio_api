@@ -261,3 +261,13 @@ def cancel_appointment(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     
+@api_view(["GET", "POST", "DELETE"])
+def services_provided(request):
+    data = request.data
+    if request.method == "POST":
+        serializer = ChronicDiseaseSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    

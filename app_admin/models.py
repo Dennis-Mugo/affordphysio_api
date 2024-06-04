@@ -22,7 +22,7 @@ class AdminUser(User):
     years_of_experience = models.IntegerField(null=True)
 
     def __str__(self):
-        return self.first_name
+        return str(self.id) + " " + self.first_name
     
 class EmailToken(models.Model):
     id = models.UUIDField( 

@@ -1,9 +1,9 @@
 from django.http import JsonResponse
 from .models import AppAdmin, AdminUser, EmailToken, EducationResource, ServiceProvided
 from .serializers import AppAdminSerializer, UserSerializer, AdminUserSerializer, EmailTokenSerializer, EdResourceSerializer, ServiceSerializer
-from manager.app_serializers import ManagerSerializer
+from app_manager.serializers import ManagerUserSerializer
 from manager.models import Manager
-from .service import get_email_verification_link, get_password_reset_link, get_manager_email_verification_link
+from .service import get_email_verification_link, get_password_reset_link_admin, get_manager_email_verification_link
 
 from rest_framework.response import Response
 from rest_framework import status
@@ -78,7 +78,7 @@ def signup_verify(request):
 @api_view(["POST"])
 def signup_set_password(request):
     email = request.data["email"]
-    user = AdminUser.objects.get(email=email)
+    user = get_object_or_404(AdminUser, email=email)
     user.set_password(request.data['password'])
     user.save()
     serializer = AdminUserSerializer(user)
@@ -89,7 +89,7 @@ def forgot_password_send_email(request):
     email = request.data["email"]
     user = get_object_or_404(AdminUser, email=email)
     # Send email with link to take them to forgot password page
-    password_change_link = get_password_reset_link(email)
+    password_change_link = get_password_reset_link_admin(email)
     send_mail(
         'Afford Physio Password Reset',
         f'Follow the link below to change your password\n\n{password_change_link}\n\n The link expires in 10 minutes.',
@@ -186,10 +186,10 @@ def add_manager(request):
         "email": request.data["email"],
         "first_name": request.data["first_name"],
         "last_name": request.data["last_name"],
-        "username": request.data["email"],
+        "username": request.data["first_name"]+request.data['last_name'],
         "password": "amref"
     }
-    serializer = ManagerSerializer(data=data_obj)
+    serializer = ManagerUserSerializer(data=data_obj)
     if serializer.is_valid():
         serializer.save()
         verify_link = get_manager_email_verification_link(request.data['email'])

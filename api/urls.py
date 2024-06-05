@@ -22,6 +22,7 @@ import manager
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('app_admin/', include('app_admin.urls')),
+    path('app_manager/', include('app_manager.urls')),
     path('patient/', include('patient.urls')),
     path('managers/', include("manager.urls")),
     path('physiotherapist/', include("physiotherapist.urls"))

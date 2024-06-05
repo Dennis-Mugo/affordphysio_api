@@ -2,6 +2,7 @@ from django.http import JsonResponse
 from .models import AppAdmin, AdminUser, EmailToken, EducationResource, ServiceProvided
 from .serializers import AppAdminSerializer, UserSerializer, AdminUserSerializer, EmailTokenSerializer, EdResourceSerializer, ServiceSerializer
 from app_manager.serializers import ManagerUserSerializer
+from app_manager.models import ManagerUser
 from manager.models import Manager
 from .service import get_email_verification_link, get_password_reset_link_admin, get_manager_email_verification_link
 
@@ -206,21 +207,21 @@ def add_manager(request):
 
 @api_view(["GET"])
 def remove_manager(request, managerId):
-    manager = get_object_or_404(Manager, id=managerId)
+    manager = get_object_or_404(ManagerUser, id=managerId)
     manager.is_active = False
     manager.save()
     return Response({"success": True}, status=status.HTTP_200_OK)
 
 @api_view(["GET"])
 def view_managers(request):
-    managers = Manager.objects.filter(is_active=True)
-    serializer = ManagerSerializer(managers, many=True)
+    managers = ManagerUser.objects.filter(is_active=True)
+    serializer = ManagerUserSerializer(managers, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(["GET"])
 def view_removed_managers(request):
-    managers = Manager.objects.filter(is_active=False)
-    serializer = ManagerSerializer(managers, many=True)
+    managers = ManagerUser.objects.filter(is_active=False)
+    serializer = ManagerUserSerializer(managers, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 

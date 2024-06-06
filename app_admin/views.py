@@ -1,10 +1,10 @@
 from django.http import JsonResponse
 from .models import AppAdmin, AdminUser, EmailToken, EducationResource, ServiceProvided
 from .serializers import AppAdminSerializer, UserSerializer, AdminUserSerializer, EmailTokenSerializer, EdResourceSerializer, ServiceSerializer
-from app_manager.serializers import ManagerUserSerializer
-from app_manager.models import ManagerUser
+from app_manager.serializers import ManagerUserSerializer, ManagerLogSerializer
+from app_manager.models import ManagerUser, ManagerLog
 from manager.models import Manager
-from .service import get_email_verification_link, get_password_reset_link_admin, get_manager_email_verification_link
+from .service import get_email_verification_link, get_password_reset_link_admin, get_manager_email_verification_link, get_manager_detail
 
 from rest_framework.response import Response
 from rest_framework import status
@@ -288,6 +288,13 @@ def update_ed_resource(request, resource_id):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(["GET"])
+def view_manager_logs(request):
+    manager_logs = ManagerLog.objects.all().order_by("-timestamp")
+    serializer = ManagerLogSerializer(manager_logs, many=True)
+    log_list = get_manager_detail(serializer.data)
+    return Response(log_list, status=status.HTTP_200_OK)
     
     
 

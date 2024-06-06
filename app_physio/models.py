@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+import uuid
 
 
 # Create your models here.
@@ -14,3 +15,16 @@ class PhysioUser(User):
 
     def __str__(self):
         return str(self.id) + " " + self.first_name
+    
+
+class PhysioLog(models.Model):
+    id = models.UUIDField( 
+         primary_key = True, 
+         default = uuid.uuid4, 
+         editable = False),
+    timestamp = models.DateTimeField(null=True)
+    activity = models.CharField(null=True, max_length=50)
+    physio = models.ForeignKey(PhysioUser, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.activity

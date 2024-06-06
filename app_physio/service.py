@@ -1,11 +1,18 @@
-from .serializers import EmailTokenSerializer
 client_url = "http://localhost:5173"
+import time
+import datetime
+from .serializers import PhysioLogSerializer
 
-
-    
-def get_password_reset_link_physio(email):
-    serializer = EmailTokenSerializer(data={})
+def add_physio_log(activity, physio):
+    epoch_time = int(time.time())
+    timestamp = datetime.datetime.fromtimestamp(epoch_time)  
+    log_obj = {
+        "activity": activity,
+        "timestamp": timestamp,
+        "physio": physio
+    }
+    serializer = PhysioLogSerializer(data=log_obj)
     if serializer.is_valid():
         serializer.save()
-        token_id = serializer.data["id"]
-        return f"{client_url}/manager/managerresetpassword/{email}/{token_id}"
+        return True
+    return serializer.errors

@@ -19,6 +19,10 @@ urlpatterns = [
     path("view_physios", views.view_physios),
     path("view_removed_physios", views.view_removed_physios),
 
+    path("view_physio_logs", views.view_physio_logs),
+    path("view_patient_logs", views.view_patient_logs),
+
+
 
     
 ]

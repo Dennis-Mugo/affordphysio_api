@@ -1,4 +1,3 @@
 venv/
 notes.txt
 .env
-app_physio/views.py

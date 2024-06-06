@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import ManagerUser, EmailToken
+from .models import ManagerUser, EmailToken, ManagerLog
 from django.contrib.auth.models import User
 
 
@@ -13,4 +13,9 @@ class EmailTokenSerializer(serializers.ModelSerializer):
     class Meta:
         model = EmailToken
         fields = ['id', 'date_created']
+
+class ManagerLogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ManagerLog
+        exclude = []
 

@@ -18,6 +18,7 @@ urlpatterns = [
     path("remove_manager/<int:managerId>", views.remove_manager),
     path("view_managers", views.view_managers),
     path("view_removed_managers", views.view_removed_managers),
+    path("view_manager_logs", views.view_manager_logs),
 
 
     path("services_provided", views.services_provided),

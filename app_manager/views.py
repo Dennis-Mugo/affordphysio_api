@@ -1,12 +1,15 @@
 from django.http import JsonResponse
 from .models import ManagerUser
 from app_admin.models import EmailToken
-from app_physio.models import PhysioUser
+from app_physio.models import PhysioUser, PhysioLog
 from .serializers import ManagerUserSerializer
 from app_admin.serializers import EmailTokenSerializer
-from app_physio.serializers import PhysioUserSerializer
+from app_physio.serializers import PhysioUserSerializer, PhysioLogSerializer
+from patient.serializers import PatientLogSerializer
+from patient.models import PatientLog
 from manager.models import Manager
 from app_admin.service import get_password_reset_link_manager, get_physio_email_verification_link
+from .service import get_physio_detail, get_patient_detail, add_manager_log
 
 from rest_framework.response import Response
 from rest_framework import status
@@ -88,7 +91,11 @@ def login(request):
         return Response({"detail": "Email or password is incorrect"}, status=status.HTTP_404_NOT_FOUND)
     token, created = Token.objects.get_or_create(user=user)
     serializer = ManagerUserSerializer(instance=user)
-    
+
+    log = add_manager_log("Logged in", user)
+    if log != True:
+        print(log)
+        return Response(log, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     return Response({'token': token.key, 'user': serializer.data}, status=status.HTTP_201_CREATED)
 
@@ -107,6 +114,10 @@ def test_token(request):
 
 def logout(request):
     request.user.auth_token.delete()
+    log = add_manager_log("Logged out", request.user)
+    if log != True:
+        print(log)
+        return Response(log, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     return Response(status=status.HTTP_200_OK)
 
 @api_view(["GET", "PUT"])
@@ -192,6 +203,20 @@ def view_removed_physios(request):
     physios = PhysioUser.objects.filter(is_active=False)
     serializer = PhysioUserSerializer(physios, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(["GET"])
+def view_physio_logs(request):
+    physio_logs = PhysioLog.objects.all().order_by("-timestamp")
+    serializer = PhysioLogSerializer(physio_logs, many=True)
+    log_list = get_physio_detail(serializer.data)
+    return Response(log_list, status=status.HTTP_200_OK)
+
+@api_view(["GET"])
+def view_patient_logs(request):
+    patient_logs = PatientLog.objects.all().order_by("-timestamp")
+    serializer = PatientLogSerializer(patient_logs, many=True)
+    log_list = get_patient_detail(serializer.data)
+    return Response(log_list, status=status.HTTP_200_OK)
 
 
 

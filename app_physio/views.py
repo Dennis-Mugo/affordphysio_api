@@ -164,8 +164,7 @@ def appointments(request):
     if request.method == "PATCH":
         appointment_id = request.data["appointmentId"]
         appointment = get_object_or_404(Appointment, id=appointment_id)
-        obj = request.data
-        serializer = AppointmentSerializer(appointment, data=obj, partial=True)
+        serializer = AppointmentSerializer(appointment, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -257,6 +256,27 @@ def get_accepted_appointments(request):
     serializer = AppointmentSerializer(appointments, many=True)
     data = get_patient_detail_appointments(serializer.data)
     return Response(data, status=status.HTTP_200_OK)
+
+@api_view(["POST"])
+def reschedule_appointment(request):
+    appointment_id = request.data["appointmentId"]
+    appointment = get_object_or_404(Appointment, id=appointment_id)
+    data = request.data
+    if "startTime" in data and "endTime" in data and "dateTimestamp" in data:
+        # request.data["date"] = datetime.date.fromtimestamp(data["dateTimestamp"])
+        # request.data["start_time"] = datetime.time(hour=data["startTime"]["hour"], minute=data["startTime"]["minute"])
+        # request.data["end_time"] = datetime.time(hour=data["endTime"]["hour"], minute=data["endTime"]["minute"])
+        request.data["timestamp"] = datetime.datetime.fromtimestamp(data["dateTimestamp"] + \
+        (data["startTime"]["hour"] * 60 * 60) + \
+        (data["startTime"]["minute"] * 60))
+
+        serializer = AppointmentSerializer(appointment, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        return Response({"error": "one of the required field values is missing"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 

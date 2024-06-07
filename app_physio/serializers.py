@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import PhysioUser, PhysioLog
+from .models import PhysioUser, PhysioLog, PhysioSchedule
 from django.contrib.auth.models import User
 
 
@@ -12,6 +12,11 @@ class PhysioUserSerializer(serializers.ModelSerializer):
 class PhysioLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = PhysioLog
+        exclude = []
+
+class PhysioScheduleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PhysioSchedule
         exclude = []
 
 

@@ -1,6 +1,7 @@
 from django.http import JsonResponse
 from .models import Patient, PatientFeedback, Appointment
 from app_admin.models import EmailToken
+from app_physio.models import PhysioUser
 from app_admin.serializers import EmailTokenSerializer
 from .serializers import PatientSerializer, PatientFeedbackSerializer, AppointmentSerializer, AppointmentCancellationSerializer, PenaltySerializer
 from .service import get_email_verification_link, get_password_reset_link, add_patient_log
@@ -184,8 +185,10 @@ def appointments(request):
     if request.method == "PUT":
         data = request.data
         patient = get_object_or_404(Patient, id=data["patientId"])
+        physio = get_object_or_404(PhysioUser, id=data["physioId"])
         obj = {
             "patient": patient,
+            "physiotherapist": physio,
             "timestamp": datetime.datetime.fromtimestamp(data["timestamp"]),
             "status": data["status"],
             "appointment_type": data["appointmentType"]

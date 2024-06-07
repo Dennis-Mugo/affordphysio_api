@@ -12,6 +12,13 @@ urlpatterns = [
     path('profile/<int:physioId>', views.physio_profile),
     path('logout', views.logout),
 
+    path("set_availability", views.set_schedule),
+
+    path("get_incoming_appointments", views.get_incoming_appointments),
+    path("get_accepted_appointments", views.get_accepted_appointments),
+
+    path("change_appointment_status", views.appointments),
+
     # path('add_feedback', views.add_feedback),
     # path("get_feedback", views.get_feedback),
 

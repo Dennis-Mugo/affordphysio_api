@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 import uuid
+from app_physio.models import PhysioUser
 
 # Create your models here.
 class Patient(User):
@@ -60,7 +61,7 @@ class Appointment(models.Model):
     #      editable = False)
     timestamp = models.DateTimeField(null=True)
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
-    # physiotherapist = models.ForeignKey()
+    physiotherapist = models.ForeignKey(PhysioUser, on_delete=models.CASCADE, default=24)
     status = models.CharField(null=True, max_length=50)
     appointment_type = models.CharField(null=True, max_length=50)
     created_date = models.DateTimeField(auto_now_add=True)

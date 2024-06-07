@@ -1,10 +1,12 @@
 from django.http import JsonResponse
-from .models import PhysioUser
+from .models import PhysioUser, PhysioSchedule
 from app_admin.models import EmailToken
+from patient.models import Appointment
+from patient.serializers import AppointmentSerializer
 from app_admin.serializers import EmailTokenSerializer
-from .serializers import PhysioUserSerializer
+from .serializers import PhysioUserSerializer, PhysioScheduleSerializer
 from app_admin.service import get_password_reset_link_physio
-from .service import add_physio_log
+from .service import add_physio_log, get_patient_detail_appointments
 
 from rest_framework.response import Response
 from rest_framework import status
@@ -127,20 +129,6 @@ def verify_email_token(request, tokenId):
 
     return Response({"valid": token_valid}, status=status.HTTP_200_OK)
 
-@api_view(["POST"])
-def add_feedback(request):
-    data = request.data
-    data_obj = {
-        "patient": get_object_or_404(Patient, id=data["patientId"]),
-        "comments": data['comments'],
-        "rating": data["rating"],
-        "timestamp": datetime.datetime.fromtimestamp(data["timestamp"])  
-    }
-    serializer = PatientFeedbackSerializer(data=data_obj)
-    if serializer.is_valid():
-        serializer.save()
-        return Response({"success": True}, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(["POST"])
 def get_feedback(request):
@@ -152,32 +140,32 @@ def get_feedback(request):
 
 @api_view(["PUT","POST", "PATCH"])
 def appointments(request):
-    if request.method == "PUT":
-        data = request.data
-        patient = get_object_or_404(Patient, id=data["patientId"])
-        obj = {
-            "patient": patient,
-            "timestamp": datetime.datetime.fromtimestamp(data["timestamp"]),
-            "status": data["status"],
-            "appointment_type": data["appointmentType"]
-        }
-        serializer = AppointmentSerializer(data=obj)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    # if request.method == "PUT":
+    #     data = request.data
+    #     patient = get_object_or_404(Patient, id=data["patientId"])
+    #     obj = {
+    #         "patient": patient,
+    #         "timestamp": datetime.datetime.fromtimestamp(data["timestamp"]),
+    #         "status": data["status"],
+    #         "appointment_type": data["appointmentType"]
+    #     }
+    #     serializer = AppointmentSerializer(data=obj)
+    #     if serializer.is_valid():
+    #         serializer.save()
+    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-    elif request.method == "POST":
-        patient = get_object_or_404(Patient, id=request.data["patientId"])
-        appointments = Appointment.objects.filter(patient=patient)
-        serializer = AppointmentSerializer(appointments, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    # elif request.method == "POST":
+    #     patient = get_object_or_404(Patient, id=request.data["patientId"])
+    #     appointments = Appointment.objects.filter(patient=patient)
+    #     serializer = AppointmentSerializer(appointments, many=True)
+    #     return Response(serializer.data, status=status.HTTP_200_OK)
     
-    elif request.method == "PATCH":
-        patient_id = request.data["patientId"]
+    if request.method == "PATCH":
         appointment_id = request.data["appointmentId"]
         appointment = get_object_or_404(Appointment, id=appointment_id)
-        serializer = AppointmentSerializer(appointment, data=request.data, partial=True)
+        obj = request.data
+        serializer = AppointmentSerializer(appointment, data=obj, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -232,13 +220,44 @@ def cancel_appointment(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     
-@api_view(["GET", "POST", "DELETE"])
-def services_provided(request):
+@api_view(["POST"])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def set_schedule(request):
+    physio = request.user
     data = request.data
-    if request.method == "POST":
-        serializer = ChronicDiseaseSerializer(data=data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+    request.data["physio"] = physio
+    request.data["date"] = datetime.date.fromtimestamp(data["dateTimestamp"])
+    request.data["start_time"] = datetime.time(hour=data["startTime"]["hour"], minute=data["startTime"]["minute"])
+    request.data["end_time"] = datetime.time(hour=data["endTime"]["hour"], minute=data["endTime"]["minute"])
+
+    serializer = PhysioScheduleSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    else:
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+@api_view(["POST"])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def get_incoming_appointments(request):
+    physio = request.user
+    appointments = Appointment.objects.filter(physiotherapist=physio, status="pending")
+    serializer = AppointmentSerializer(appointments, many=True)
+    data = get_patient_detail_appointments(serializer.data)
+    return Response(data, status=status.HTTP_200_OK)
+
+@api_view(["POST"])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def get_accepted_appointments(request):
+    physio = request.user
+    appointments = Appointment.objects.filter(physiotherapist=physio, status="accepted")
+    serializer = AppointmentSerializer(appointments, many=True)
+    data = get_patient_detail_appointments(serializer.data)
+    return Response(data, status=status.HTTP_200_OK)
+
+
+
+

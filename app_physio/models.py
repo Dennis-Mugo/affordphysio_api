@@ -28,3 +28,14 @@ class PhysioLog(models.Model):
 
     def __str__(self):
         return self.activity
+    
+
+class PhysioSchedule(models.Model):
+    date = models.DateField(null=True)
+    start_time = models.TimeField(null=True)
+    end_time = models.TimeField(null=True)
+    appointment_type = models.CharField(null=True, max_length=50)
+    physio = models.ForeignKey(PhysioUser, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return str(self.id) + self.appointment_type

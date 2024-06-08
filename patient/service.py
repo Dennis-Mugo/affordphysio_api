@@ -2,6 +2,9 @@ from app_admin.serializers import EmailTokenSerializer
 from .serializers import PatientLogSerializer
 import time
 import datetime
+from django.shortcuts import get_object_or_404
+from app_physio.serializers import PhysioUserSerializer
+from app_physio.models import PhysioUser
 
 def get_email_verification_link(email):
     serializer = EmailTokenSerializer(data={})
@@ -30,4 +33,19 @@ def add_patient_log(activity, patient):
         serializer.save()
         return True
     return serializer.errors
+
+def get_physio_detail_feedback(logs):
+    cache = {}
+    res = []
+    for log in logs:
+        physio_id = log['physiotherapist']
+        if physio_id in cache:
+            log['physiotherapist'] = cache[physio_id]
+        else:
+            physio = get_object_or_404(PhysioUser, id=physio_id)
+            serializer = PhysioUserSerializer(instance=physio)
+            log['physiotherapist'] = serializer.data
+            cache[physio_id] = serializer.data
+        res.append(log)
+    return res
 

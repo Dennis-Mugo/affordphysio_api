@@ -46,7 +46,7 @@ class PatientFeedback(models.Model):
          editable = False)
     timestamp = models.DateTimeField(null=True)
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
-    # physiotherapist = models.ForeignKey()
+    physiotherapist = models.ForeignKey(PhysioUser, on_delete=models.CASCADE, default=24)
     comments = models.TextField(null=True)
     rating = models.IntegerField(null=True)
 

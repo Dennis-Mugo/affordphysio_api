@@ -1,8 +1,8 @@
 from django.http import JsonResponse
 from .models import PhysioUser, PhysioSchedule
 from app_admin.models import EmailToken
-from patient.models import Appointment
-from patient.serializers import AppointmentSerializer
+from patient.models import Appointment, PatientFeedback
+from patient.serializers import AppointmentSerializer, PatientFeedbackSerializer
 from app_admin.serializers import EmailTokenSerializer
 from .serializers import PhysioUserSerializer, PhysioScheduleSerializer
 from app_admin.service import get_password_reset_link_physio
@@ -132,11 +132,12 @@ def verify_email_token(request, tokenId):
 
 @api_view(["POST"])
 def get_feedback(request):
-    patient_id = request.data["patientId"]
-    patient = get_object_or_404(Patient, id=patient_id)
-    feedback_list = PatientFeedback.objects.filter(patient=patient)
+    physio_id = request.data["physioId"]
+    physio = get_object_or_404(PhysioUser, id=physio_id)
+    feedback_list = PatientFeedback.objects.filter(physiotherapist=physio)
     serializer = PatientFeedbackSerializer(feedback_list, many=True)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+    data = get_patient_detail_appointments(serializer.data)
+    return Response(data, status=status.HTTP_200_OK)
 
 @api_view(["PUT","POST", "PATCH"])
 def appointments(request):
@@ -236,6 +237,15 @@ def set_schedule(request):
         return Response(serializer.data, status=status.HTTP_200_OK)
     else:
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def get_schedule(request):
+    physio = request.user
+    schedule_list = PhysioSchedule.objects.filter(physio=physio)
+    serializer = PhysioScheduleSerializer(schedule_list, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
     
 @api_view(["POST"])
 @authentication_classes([SessionAuthentication, TokenAuthentication])

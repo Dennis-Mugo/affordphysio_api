@@ -17,6 +17,8 @@ urlpatterns = [
     path("get_feedback", views.get_feedback),
 
     path("appointments", views.appointments),
-    path("cancel_appointment", views.cancel_appointment)
+    path("cancel_appointment", views.cancel_appointment),
+
+    path("get_schedule", views.get_schedule),
 ]
 

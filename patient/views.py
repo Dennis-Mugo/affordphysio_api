@@ -1,10 +1,11 @@
 from django.http import JsonResponse
 from .models import Patient, PatientFeedback, Appointment
 from app_admin.models import EmailToken
-from app_physio.models import PhysioUser
+from app_physio.models import PhysioUser, PhysioSchedule
+from app_physio.serializers import PhysioUserSerializer, PhysioScheduleSerializer
 from app_admin.serializers import EmailTokenSerializer
 from .serializers import PatientSerializer, PatientFeedbackSerializer, AppointmentSerializer, AppointmentCancellationSerializer, PenaltySerializer
-from .service import get_email_verification_link, get_password_reset_link, add_patient_log
+from .service import get_email_verification_link, get_password_reset_link, add_patient_log, get_physio_detail_feedback
 
 from rest_framework.response import Response
 from rest_framework import status
@@ -110,7 +111,8 @@ def login(request):
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def test_token(request):
-    return Response(f"Passed for {request.user.email}")
+    serializer = PatientSerializer(instance=request.user)
+    return Response({"user": serializer.data}, status=status.HTTP_200_OK)
 
 
 @api_view(["POST"])
@@ -162,6 +164,7 @@ def add_feedback(request):
     data = request.data
     data_obj = {
         "patient": get_object_or_404(Patient, id=data["patientId"]),
+        "physiotherapist": get_object_or_404(PhysioUser, id=data["physioId"]),
         "comments": data['comments'],
         "rating": data["rating"],
         "timestamp": datetime.datetime.fromtimestamp(data["timestamp"])  
@@ -178,7 +181,8 @@ def get_feedback(request):
     patient = get_object_or_404(Patient, id=patient_id)
     feedback_list = PatientFeedback.objects.filter(patient=patient)
     serializer = PatientFeedbackSerializer(feedback_list, many=True)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+    data = get_physio_detail_feedback(serializer.data)
+    return Response(data, status=status.HTTP_200_OK)
 
 @api_view(["PUT","POST", "PATCH"])
 def appointments(request):
@@ -203,7 +207,8 @@ def appointments(request):
         patient = get_object_or_404(Patient, id=request.data["patientId"])
         appointments = Appointment.objects.filter(patient=patient)
         serializer = AppointmentSerializer(appointments, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        data = get_physio_detail_feedback(serializer.data)
+        return Response(data, status=status.HTTP_200_OK)
     
     elif request.method == "PATCH":
         patient_id = request.data["patientId"]
@@ -262,6 +267,14 @@ def cancel_appointment(request):
         if is_penalty: obj["penalty"] = 30
         return Response(obj, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(["POST"])
+def get_schedule(request):
+    physio_id = request.data["physioId"]
+    physio = get_object_or_404(PhysioUser, id=physio_id)
+    schedule_list = PhysioSchedule.objects.filter(physio=physio)
+    serializer = PhysioScheduleSerializer(schedule_list, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
     
 

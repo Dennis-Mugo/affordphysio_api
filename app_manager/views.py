@@ -163,6 +163,18 @@ def verify_email_token(request, tokenId):
 
 @api_view(["POST"])
 def add_physio(request):
+    is_resend = request.data.get("isResend", False)
+    if is_resend:
+        verify_link = get_physio_email_verification_link(request.data['email'])
+    
+        send_mail(
+            'Afford Physio Email verification',
+            f'Follow the link below to complete signing up\n\n{verify_link}\n\n The link expires in 10 minutes.',
+            'dennismthairu@gmail.com', 
+            [request.data['email']],
+            fail_silently=False,
+        )
+        return Response({"success": True}, status=status.HTTP_200_OK)
     data_obj = {
         "email": request.data["email"],
         "first_name": request.data["first_name"],

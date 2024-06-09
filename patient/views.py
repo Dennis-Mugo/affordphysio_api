@@ -26,27 +26,29 @@ import time
 
 @api_view(["POST"])
 def signup_verify(request):
-    data = request.data | {"username": request.data["email"], "password": "amref"}
-    is_resend = request.data["isResend"]
-    serializer = PatientSerializer(data=data)
-    verify_link = get_email_verification_link(request.data['email'])
+    is_resend = request.data.get("isResend", False)
+    email = request.data["email"]
+    verify_link = get_email_verification_link(email)
     if is_resend:
         #User data is saved but user wants to resend verification email
         send_mail(
             'Afford Physio Email verification',
             f'Follow the link below to complete signing up\n\n{verify_link}\n\n The link expires in 10 minutes.',
             'dennismthairu@gmail.com',
-            [request.data['email']],
+            [email],
             fail_silently=False,
         )
         return Response({"success": True}, status=status.HTTP_200_OK)
     
+
+    data = request.data | {"username": request.data["first_name"] + request.data["last_name"], "password": "amref"}
+    serializer = PatientSerializer(data=data)
     if serializer.is_valid():
         serializer.save()
-        user = Patient.objects.get(email=request.data['email'])
+        # user = Patient.objects.get(email=request.data['email'])
         # user.set_password("password")
         # user.save()
-        token = Token.objects.create(user=user) 
+        # token = Token.objects.create(user=user) 
         send_mail(
             'Afford Physio Email verification',
             f'Follow the link below to complete signing up\n\n{verify_link}\n\n The link expires in 10 minutes.',
@@ -54,7 +56,7 @@ def signup_verify(request):
             [request.data['email']],
             fail_silently=False,
         )
-        return Response({'token': token.key, 'user': PatientSerializer(user).data}, status=status.HTTP_201_CREATED)
+        return Response({'success': True}, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(["POST"])

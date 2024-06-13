@@ -29,5 +29,10 @@ urlpatterns = [
     path("delete_education_resource/<int:resource_id>", views.delete_ed_resource),
     path("update_education_resource/<int:resource_id>", views.update_ed_resource),
 
+    path("get_incoming_payments", views.get_incoming_payments),
+    path("get_accepted_payments", views.get_accepted_payments),
+    path("get_declined_payments", views.get_declined_payments),
+    path("update_payment_status/<int:payment_id>", views.update_payment_status),
+
     
 ]

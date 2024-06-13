@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Patient, PatientLog, PatientFeedback, Appointment, AppointmentCancellation, Penalty
+from .models import Patient, PatientLog, PatientFeedback, Appointment, AppointmentCancellation, Penalty, Payment
 
 class PatientSerializer(serializers.ModelSerializer):
     class Meta:
@@ -30,6 +30,12 @@ class AppointmentCancellationSerializer(serializers.ModelSerializer):
 class PenaltySerializer(serializers.ModelSerializer):
     class Meta:
         model = Penalty
+        exclude = []
+
+
+class PaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Payment
         exclude = []
 
 

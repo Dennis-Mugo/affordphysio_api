@@ -1,9 +1,9 @@
 from django.http import JsonResponse
 from .models import Patient, PatientFeedback, Appointment
-from app_admin.models import EmailToken
+from app_admin.models import EmailToken, EducationResource
 from app_physio.models import PhysioUser, PhysioSchedule
 from app_physio.serializers import PhysioUserSerializer, PhysioScheduleSerializer
-from app_admin.serializers import EmailTokenSerializer
+from app_admin.serializers import EmailTokenSerializer, EdResourceSerializer
 from .serializers import PatientSerializer, PatientFeedbackSerializer, AppointmentSerializer, AppointmentCancellationSerializer, PenaltySerializer
 from .service import get_email_verification_link, get_password_reset_link, add_patient_log, get_physio_detail_feedback
 
@@ -21,6 +21,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from django.core.mail import send_mail
 import datetime
+import pytz
 import time
 
 
@@ -169,7 +170,7 @@ def add_feedback(request):
         "physiotherapist": get_object_or_404(PhysioUser, id=data["physioId"]),
         "comments": data['comments'],
         "rating": data["rating"],
-        "timestamp": datetime.datetime.fromtimestamp(data["timestamp"])  
+        "timestamp": datetime.datetime.fromtimestamp(data["timestamp"], tz=pytz.timezone("Africa/Nairobi"))  
     }
     serializer = PatientFeedbackSerializer(data=data_obj)
     if serializer.is_valid():
@@ -195,7 +196,9 @@ def appointments(request):
         obj = {
             "patient": patient,
             "physiotherapist": physio,
-            "timestamp": datetime.datetime.fromtimestamp(data["timestamp"]),
+            "timestamp": datetime.datetime.fromtimestamp(data   ["dateTimestamp"] + \
+            (data["startTime"]["hour"] * 60 * 60) + \
+            (data["startTime"]["minute"] * 60), tz=pytz.timezone("Africa/Nairobi")),
             "status": data["status"],
             "appointment_type": data["appointmentType"]
         }
@@ -248,7 +251,7 @@ def cancel_appointment(request):
             
 
     cancel_obj = {
-        "timestamp": datetime.datetime.fromtimestamp(data["timestamp"]),
+        "timestamp": datetime.datetime.fromtimestamp(data["timestamp"], tz=pytz.timezone("Africa/Nairobi")),
         "reason": data["reason"],
         "appointment": data["appointmentId"]
     }
@@ -277,6 +280,14 @@ def get_schedule(request):
     schedule_list = PhysioSchedule.objects.filter(physio=physio)
     serializer = PhysioScheduleSerializer(schedule_list, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(["GET"])
+def get_educational_resources(request):
+    resources = EducationResource.objects.all()
+    serializer = EdResourceSerializer(resources, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
 
     
 

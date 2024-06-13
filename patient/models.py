@@ -82,6 +82,12 @@ class AppointmentCancellation(models.Model):
     reason = models.TextField(null=True)
     penalty = models.ForeignKey(Penalty, on_delete=models.CASCADE, null=True)
 
+class Payment(models.Model):
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
+    code = models.CharField(max_length=50, null=True)
+    status = models.CharField(max_length=50, null=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
 
 
 

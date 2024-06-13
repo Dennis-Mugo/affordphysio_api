@@ -22,6 +22,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from django.core.mail import send_mail
 import datetime
+import pytz
 import time
 
 
@@ -227,7 +228,7 @@ def set_schedule(request):
     physio = request.user
     data = request.data
     request.data["physio"] = physio
-    request.data["date"] = datetime.date.fromtimestamp(data["dateTimestamp"])
+    request.data["date"] = datetime.date.fromtimestamp(data["dateTimestamp"], tz=pytz.timezone("Africa/Nairobi"))
     request.data["start_time"] = datetime.time(hour=data["startTime"]["hour"], minute=data["startTime"]["minute"])
     request.data["end_time"] = datetime.time(hour=data["endTime"]["hour"], minute=data["endTime"]["minute"])
 
@@ -278,7 +279,7 @@ def reschedule_appointment(request):
         # request.data["end_time"] = datetime.time(hour=data["endTime"]["hour"], minute=data["endTime"]["minute"])
         request.data["timestamp"] = datetime.datetime.fromtimestamp(data["dateTimestamp"] + \
         (data["startTime"]["hour"] * 60 * 60) + \
-        (data["startTime"]["minute"] * 60))
+        (data["startTime"]["minute"] * 60), tz=pytz.timezone("Africa/Nairobi"))
 
         serializer = AppointmentSerializer(appointment, data=request.data, partial=True)
         if serializer.is_valid():

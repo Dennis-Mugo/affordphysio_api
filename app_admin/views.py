@@ -1,10 +1,13 @@
 from django.http import JsonResponse
 from .models import AppAdmin, AdminUser, EmailToken, EducationResource, ServiceProvided
 from .serializers import AppAdminSerializer, UserSerializer, AdminUserSerializer, EmailTokenSerializer, EdResourceSerializer, ServiceSerializer
+from patient.models import Payment
+from patient.serializers import PaymentSerializer
 from app_manager.serializers import ManagerUserSerializer, ManagerLogSerializer
 from app_manager.models import ManagerUser, ManagerLog
 from manager.models import Manager
 from .service import get_email_verification_link, get_password_reset_link_admin, get_manager_email_verification_link, get_manager_detail
+from app_physio.service import get_patient_detail_appointments
 
 from rest_framework.response import Response
 from rest_framework import status
@@ -46,6 +49,7 @@ def signup_verify(request):
     is_resend = request.data.get("isResend", False)
     
     verify_link = get_email_verification_link(request.data['email'])
+    print(verify_link)
     if is_resend:
         #User data is saved but user wants to resend verification email
         send_mail(
@@ -312,7 +316,38 @@ def view_manager_logs(request):
     serializer = ManagerLogSerializer(manager_logs, many=True)
     log_list = get_manager_detail(serializer.data)
     return Response(log_list, status=status.HTTP_200_OK)
-    
+
+@api_view(["GET"])
+def get_incoming_payments(request):
+    payments = Payment.objects.filter(status="pending")
+    serializer = PaymentSerializer(payments, many=True)
+    payments_list = get_patient_detail_appointments(serializer.data)
+    return Response(payments_list, status=status.HTTP_200_OK)
+
+@api_view(["GET"])
+def get_accepted_payments(request):
+    payments = Payment.objects.filter(status="accepted")
+    serializer = PaymentSerializer(payments, many=True)
+    payments_list = get_patient_detail_appointments(serializer.data)
+    return Response(payments_list, status=status.HTTP_200_OK)
+
+@api_view(["GET"])
+def get_declined_payments(request):
+    payments = Payment.objects.filter(status="declined")
+    serializer = PaymentSerializer(payments, many=True)
+    payments_list = get_patient_detail_appointments(serializer.data)
+    return Response(payments_list, status=status.HTTP_200_OK)
+
+@api_view(["POST"])
+def update_payment_status(request, payment_id):
+    payment = get_object_or_404(Payment, id=payment_id)
+    serializer = PaymentSerializer(payment, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    else:
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     
 
 

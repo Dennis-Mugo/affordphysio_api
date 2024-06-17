@@ -20,6 +20,12 @@ urlpatterns = [
     path("cancel_appointment", views.cancel_appointment),
 
     path("get_schedule", views.get_schedule),
+    path("get_available_physios", views.get_available_physios),
     path("get_educational_resources", views.get_educational_resources),
+
+    path("get_services", views.get_services),
+    path("add_payment", views.add_payment),
+
+
 ]
 

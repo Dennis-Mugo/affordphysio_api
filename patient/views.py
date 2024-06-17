@@ -1,11 +1,11 @@
 from django.http import JsonResponse
-from .models import Patient, PatientFeedback, Appointment
-from app_admin.models import EmailToken, EducationResource
+from .models import Patient, PatientFeedback, Appointment, Payment
+from app_admin.models import EmailToken, EducationResource, ServiceProvided
 from app_physio.models import PhysioUser, PhysioSchedule
 from app_physio.serializers import PhysioUserSerializer, PhysioScheduleSerializer
-from app_admin.serializers import EmailTokenSerializer, EdResourceSerializer
-from .serializers import PatientSerializer, PatientFeedbackSerializer, AppointmentSerializer, AppointmentCancellationSerializer, PenaltySerializer
-from .service import get_email_verification_link, get_password_reset_link, add_patient_log, get_physio_detail_feedback
+from app_admin.serializers import EmailTokenSerializer, EdResourceSerializer, ServiceSerializer
+from .serializers import PatientSerializer, PatientFeedbackSerializer, AppointmentSerializer, AppointmentCancellationSerializer, PenaltySerializer, PaymentSerializer
+from .service import get_email_verification_link, get_password_reset_link, add_patient_log, get_physio_detail_feedback, get_physios_from_ids
 
 from rest_framework.response import Response
 from rest_framework import status
@@ -240,6 +240,8 @@ def cancel_appointment(request):
     appointment_cancel_duration = 6 * 60 * 60 #Appointment can only be cancelled more than 6 hours prior
     is_penalty = epoch_scheduled_seconds - now_epoch_seconds < appointment_cancel_duration
 
+    
+
     if is_penalty:
         serializer = PenaltySerializer(data={
             "penalty_type": "early_cancellation",
@@ -276,8 +278,9 @@ def cancel_appointment(request):
 @api_view(["POST"])
 def get_schedule(request):
     physio_id = request.data["physioId"]
+    today = datetime.datetime.today().strftime('%Y-%m-%d')
     physio = get_object_or_404(PhysioUser, id=physio_id)
-    schedule_list = PhysioSchedule.objects.filter(physio=physio)
+    schedule_list = PhysioSchedule.objects.filter(physio=physio, date__gte=today)
     serializer = PhysioScheduleSerializer(schedule_list, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -286,6 +289,36 @@ def get_educational_resources(request):
     resources = EducationResource.objects.all()
     serializer = EdResourceSerializer(resources, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(["GET"])
+def get_services(request):
+    services = ServiceProvided.objects.all()
+    serializer = ServiceSerializer(services, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+def add_payment(request):
+    data = request.data
+    data["timestamp"] = datetime.datetime.fromtimestamp(data["timestamp"], tz=pytz.timezone("Africa/Nairobi"))
+    data["patient"] = data["patientId"]
+    serializer = PaymentSerializer(data=data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(["GET"])
+def get_available_physios(request):
+    today = datetime.datetime.today().strftime('%Y-%m-%d')
+    schedules = PhysioSchedule.objects.filter(date=today)
+    serializer = PhysioScheduleSerializer(schedules, many=True)
+    physio_ids = [physio["physio"] for physio in serializer.data]
+    physio_ids = list(set(physio_ids))
+    data = get_physios_from_ids(physio_ids)
+    physio_serializer = PhysioUserSerializer(data, many=True)
+
+    return Response(physio_serializer.data, status=status.HTTP_200_OK)
 
 
 

@@ -49,3 +49,9 @@ def get_physio_detail_feedback(logs):
         res.append(log)
     return res
 
+def get_physios_from_ids(ids):
+    result = []
+    for id in ids:
+        physio = get_object_or_404(PhysioUser, id=id)
+        result.append(physio)
+    return result

@@ -24,7 +24,7 @@ class Patient(User):
     hobby = models.CharField(max_length=50, null=True)
 
     def __str__(self):
-        return self.first_name + " " + self.email
+        return str(self.id) + " " + self.email
     
 
 class PatientLog(models.Model):

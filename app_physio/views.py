@@ -1,8 +1,8 @@
 from django.http import JsonResponse
 from .models import PhysioUser, PhysioSchedule
 from app_admin.models import EmailToken
-from patient.models import Appointment, PatientFeedback
-from patient.serializers import AppointmentSerializer, PatientFeedbackSerializer
+from patient.models import Appointment, PatientFeedback, Patient
+from patient.serializers import AppointmentSerializer, PatientFeedbackSerializer, AppointmentCancellationSerializer
 from app_admin.serializers import EmailTokenSerializer
 from .serializers import PhysioUserSerializer, PhysioScheduleSerializer
 from app_admin.service import get_password_reset_link_physio
@@ -176,7 +176,10 @@ def appointments(request):
 def cancel_appointment(request):
     data = request.data
     appointment = get_object_or_404(Appointment, id=data["appointmentId"])
+    physio = get_object_or_404(PhysioUser, id=data["physioId"])
+    patient = get_object_or_404(Patient, id=data["patientId"])
 
+    
     serializer = AppointmentSerializer(appointment)
     date_scheduled = serializer.data['timestamp']
     dt_scheduled = datetime.datetime.fromisoformat(date_scheduled.replace('Z', '+00:00'))
@@ -187,14 +190,14 @@ def cancel_appointment(request):
     appointment_cancel_duration = 6 * 60 * 60 #Appointment can only be cancelled more than 6 hours prior
     is_penalty = epoch_scheduled_seconds - now_epoch_seconds < appointment_cancel_duration
 
-    if is_penalty:
-        serializer = PenaltySerializer(data={
-            "penalty_type": "early_cancellation",
-            "duration": epoch_scheduled_seconds - now_epoch_seconds,
-            "fine_percentage": 30
-        })
-        if serializer.is_valid():
-            serializer.save()
+    # if is_penalty:
+    #     serializer = PenaltySerializer(data={
+    #         "penalty_type": "early_cancellation",
+    #         "duration": epoch_scheduled_seconds - now_epoch_seconds,
+    #         "fine_percentage": 30
+    #     })
+    #     if serializer.is_valid():
+    #         serializer.save()
             
 
     cancel_obj = {
@@ -202,8 +205,8 @@ def cancel_appointment(request):
         "reason": data["reason"],
         "appointment": data["appointmentId"]
     }
-    if is_penalty:
-        cancel_obj["penalty"] = serializer.data["id"] 
+    # if is_penalty:
+    #     cancel_obj["penalty"] = serializer.data["id"] 
     serializer = AppointmentCancellationSerializer(data=cancel_obj)
 
     if serializer.is_valid():
@@ -216,7 +219,14 @@ def cancel_appointment(request):
     if serializer.is_valid():
         serializer.save()
         obj = serializer.data
-        if is_penalty: obj["penalty"] = 30
+        # if is_penalty: obj["penalty"] = 30
+        send_mail(
+        'Afford Physio Appointment Cancellation',
+        f'Your appointment with {physio.first_name + " " + physio.last_name} has been cancelled due to the following reason:\n\n{data["reason"]}',
+        'dennismthairu@gmail.com',
+        [patient.email],
+        fail_silently=False,
+    )
         return Response(obj, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -228,7 +238,7 @@ def set_schedule(request):
     physio = request.user
     data = request.data
     request.data["physio"] = physio
-    request.data["date"] = datetime.date.fromtimestamp(data["dateTimestamp"], tz=pytz.timezone("Africa/Nairobi"))
+    request.data["date"] = datetime.date.fromtimestamp(data["dateTimestamp"])
     request.data["start_time"] = datetime.time(hour=data["startTime"]["hour"], minute=data["startTime"]["minute"])
     request.data["end_time"] = datetime.time(hour=data["endTime"]["hour"], minute=data["endTime"]["minute"])
 

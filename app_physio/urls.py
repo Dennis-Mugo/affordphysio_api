@@ -19,6 +19,7 @@ urlpatterns = [
     path("get_accepted_appointments", views.get_accepted_appointments),
 
     path("change_appointment_status", views.appointments),
+    path("cancel_appointment", views.cancel_appointment),
     path("reschedule_appointment", views.reschedule_appointment),
 
     

@@ -5,8 +5,8 @@ from app_physio.models import PhysioUser, PhysioLog
 from .serializers import ManagerUserSerializer
 from app_admin.serializers import EmailTokenSerializer
 from app_physio.serializers import PhysioUserSerializer, PhysioLogSerializer
-from patient.serializers import PatientLogSerializer
-from patient.models import PatientLog
+from patient.serializers import PatientLogSerializer, PatientSerializer
+from patient.models import PatientLog, Patient
 from manager.models import Manager
 from app_admin.service import get_password_reset_link_manager, get_physio_email_verification_link
 from .service import get_physio_detail, get_patient_detail, add_manager_log
@@ -229,6 +229,13 @@ def view_patient_logs(request):
     serializer = PatientLogSerializer(patient_logs, many=True)
     log_list = get_patient_detail(serializer.data)
     return Response(log_list, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+def view_patients(request):
+    patients = Patient.objects.all()
+    serializer = PatientSerializer(patients, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 

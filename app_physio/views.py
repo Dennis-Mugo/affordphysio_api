@@ -1,10 +1,10 @@
 from django.http import JsonResponse
-from .models import PhysioUser, PhysioSchedule
+from .models import PhysioUser, PhysioSchedule, PostVisit
 from app_admin.models import EmailToken
 from patient.models import Appointment, PatientFeedback, Patient
 from patient.serializers import AppointmentSerializer, PatientFeedbackSerializer, AppointmentCancellationSerializer
 from app_admin.serializers import EmailTokenSerializer
-from .serializers import PhysioUserSerializer, PhysioScheduleSerializer
+from .serializers import PhysioUserSerializer, PhysioScheduleSerializer, PostVisitSerializer
 from app_admin.service import get_password_reset_link_physio
 from .service import add_physio_log, get_patient_detail_appointments
 
@@ -298,6 +298,30 @@ def reschedule_appointment(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     else:
         return Response({"error": "one of the required field values is missing"}, status=status.HTTP_400_BAD_REQUEST)
+    
+@api_view(["POST"])
+def add_post_visit(request):
+    data = request.data
+    patient = get_object_or_404(Patient, email=data["patientEmail"])
+    physio = get_object_or_404(PhysioUser, id=data["physioId"])
+    data["follow_up_date"] = datetime.date.fromtimestamp(data["followUpDate"])
+    data["treatment_plan"] = data["treatmentPlan"]
+    data["pain_management"] = data["painManagement"]
+    data["physio"] = physio
+    data["patient"] = patient.id
+    serializer = PostVisitSerializer(data=data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(["POST"])
+def get_post_visit(request):
+    physio_id = request.data["physioId"]
+    physio = get_object_or_404(PhysioUser, id=physio_id)
+    post_visits = PostVisit.objects.filter(physio=physio)
+    serializer = PostVisitSerializer(post_visits, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 

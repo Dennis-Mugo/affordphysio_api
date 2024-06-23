@@ -24,8 +24,8 @@ urlpatterns = [
 
     
     path("get_feedback", views.get_feedback),
-
+    path("add_post_visit", views.add_post_visit),
+    path("get_post_visit", views.get_post_visit),
     # path("appointments", views.appointments),
-    # path("cancel_appointment", views.cancel_appointment)
 ]
 

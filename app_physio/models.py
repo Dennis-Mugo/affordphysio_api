@@ -39,3 +39,13 @@ class PhysioSchedule(models.Model):
 
     def __str__(self):
         return str(self.id) + self.appointment_type
+    
+class PostVisit(models.Model):
+    patient = models.IntegerField(null=False)
+    physio = models.ForeignKey(PhysioUser, on_delete=models.CASCADE)
+    treatment_plan = models.TextField(null=False)
+    recommendations = models.TextField(null=False)
+    follow_up_date = models.DateField(null=False)
+    pain_management = models.TextField(null=False)
+    feedback = models.TextField(null=False)
+    date_created = models.DateTimeField(auto_now_add=True)

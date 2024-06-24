@@ -170,7 +170,7 @@ def add_feedback(request):
         "physiotherapist": get_object_or_404(PhysioUser, id=data["physioId"]),
         "comments": data['comments'],
         "rating": data["rating"],
-        "timestamp": datetime.datetime.fromtimestamp(data["timestamp"], tz=pytz.timezone("Africa/Nairobi"))  
+        "timestamp": datetime.datetime.fromtimestamp(data["timestamp"])  
     }
     serializer = PatientFeedbackSerializer(data=data_obj)
     if serializer.is_valid():
@@ -198,7 +198,8 @@ def appointments(request):
             "physiotherapist": physio,
             "timestamp": datetime.datetime.fromtimestamp(data   ["dateTimestamp"] + \
             (data["startTime"]["hour"] * 60 * 60) + \
-            (data["startTime"]["minute"] * 60), tz=pytz.timezone("Africa/Nairobi")),
+            (data["startTime"]["minute"] * 60)),
+            "end_time": datetime.time(hour = data["endTime"]["hour"], minute = data["endTime"]["minute"]),
             "status": data["status"],
             "appointment_type": data["appointmentType"]
         }
@@ -220,11 +221,12 @@ def appointments(request):
         data = request.data
         appointment_id = data["appointmentId"]
         appointment = get_object_or_404(Appointment, id=appointment_id)
-        print(data)
+        
         obj = {
             "timestamp": datetime.datetime.fromtimestamp(data   ["dateTimestamp"] + \
             (data["startTime"]["hour"] * 60 * 60) + \
-            (data["startTime"]["minute"] * 60), tz=pytz.timezone("Africa/Nairobi")),
+            (data["startTime"]["minute"] * 60)),
+            "end_time": datetime.time(hour = data["endTime"]["hour"], minute = data["endTime"]["minute"]),
             "status": data["status"],
             "appointment_type": data["appointmentType"]
         }
@@ -262,7 +264,7 @@ def cancel_appointment(request):
             
 
     cancel_obj = {
-        "timestamp": datetime.datetime.fromtimestamp(data["timestamp"], tz=pytz.timezone("Africa/Nairobi")),
+        "timestamp": datetime.datetime.fromtimestamp(data["timestamp"]),
         "reason": data["reason"],
         "appointment": data["appointmentId"]
     }
@@ -309,7 +311,7 @@ def get_services(request):
 @api_view(["POST"])
 def add_payment(request):
     data = request.data
-    data["timestamp"] = datetime.datetime.fromtimestamp(data["timestamp"], tz=pytz.timezone("Africa/Nairobi"))
+    data["timestamp"] = datetime.datetime.fromtimestamp(data["timestamp"])
     data["patient"] = data["patientId"]
     serializer = PaymentSerializer(data=data)
     if serializer.is_valid():

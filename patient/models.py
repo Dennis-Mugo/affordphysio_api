@@ -60,6 +60,7 @@ class Appointment(models.Model):
     #      default = uuid.uuid4, 
     #      editable = False)
     timestamp = models.DateTimeField(null=True)
+    end_time = models.TimeField(null=True)
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
     physiotherapist = models.ForeignKey(PhysioUser, on_delete=models.CASCADE, default=24)
     status = models.CharField(null=True, max_length=50)

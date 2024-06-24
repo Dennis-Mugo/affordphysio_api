@@ -67,7 +67,7 @@ def login(request):
     if not user.is_active:
         return Response({"detail": "This account has been deleted!"}, status=status.HTTP_200_OK)
     
-    
+
     if not user.check_password(request.data['password']):
         return Response({"detail": "Email or password is incorrect"}, status=status.HTTP_404_NOT_FOUND)
     token, created = Token.objects.get_or_create(user=user)
@@ -290,10 +290,11 @@ def reschedule_appointment(request):
         # request.data["date"] = datetime.date.fromtimestamp(data["dateTimestamp"])
         # request.data["start_time"] = datetime.time(hour=data["startTime"]["hour"], minute=data["startTime"]["minute"])
         # request.data["end_time"] = datetime.time(hour=data["endTime"]["hour"], minute=data["endTime"]["minute"])
+        
         request.data["timestamp"] = datetime.datetime.fromtimestamp(data["dateTimestamp"] + \
         (data["startTime"]["hour"] * 60 * 60) + \
-        (data["startTime"]["minute"] * 60), tz=pytz.timezone("Africa/Nairobi"))
-
+        (data["startTime"]["minute"] * 60))
+        request.data["end_time"] = datetime.time(hour=data["endTime"]["hour"], minute=data["endTime"]["minute"])
         serializer = AppointmentSerializer(appointment, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()

@@ -121,6 +121,8 @@ def reset_password(request):
 def login(request):
     user = get_object_or_404(AdminUser, email=request.data['email'])
     
+    
+    
     if not user.check_password(request.data['password']):
         return Response({"detail": "Email or password is incorrect"}, status=status.HTTP_404_NOT_FOUND)
     token, created = Token.objects.get_or_create(user=user)
@@ -203,6 +205,10 @@ def add_manager(request):
         )
 
         return Response({"success": True}, status=status.HTTP_200_OK)
+
+    email_exists = ManagerUser.objects.filter(email=request.data["email"])
+    if email_exists.count() > 0:
+        return Response({"detail": "This email already exists!"}, status=status.HTTP_200_OK)
 
     data_obj = {
         "email": request.data["email"],

@@ -86,6 +86,9 @@ def reset_password(request):
 @api_view(["POST"])
 def login(request):
     user = get_object_or_404(ManagerUser, email=request.data['email'])
+
+    if not user.is_active:
+        return Response({"detail": "This account has been deleted!"}, status=status.HTTP_200_OK)
     
     if not user.check_password(request.data['password']):
         return Response({"detail": "Email or password is incorrect"}, status=status.HTTP_404_NOT_FOUND)
@@ -175,6 +178,13 @@ def add_physio(request):
             fail_silently=False,
         )
         return Response({"success": True}, status=status.HTTP_200_OK)
+    
+
+    email_exists = PhysioUser.objects.filter(email=request.data["email"])
+    if email_exists.count() > 0:
+        return Response({"detail": "This email already exists!"}, status=status.HTTP_200_OK)
+    
+
     data_obj = {
         "email": request.data["email"],
         "first_name": request.data["first_name"],

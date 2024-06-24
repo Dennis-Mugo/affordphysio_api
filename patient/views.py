@@ -216,10 +216,19 @@ def appointments(request):
         return Response(data, status=status.HTTP_200_OK)
     
     elif request.method == "PATCH":
-        patient_id = request.data["patientId"]
-        appointment_id = request.data["appointmentId"]
+        # patient_id = request.data["patientId"]
+        data = request.data
+        appointment_id = data["appointmentId"]
         appointment = get_object_or_404(Appointment, id=appointment_id)
-        serializer = AppointmentSerializer(appointment, data=request.data, partial=True)
+        print(data)
+        obj = {
+            "timestamp": datetime.datetime.fromtimestamp(data   ["dateTimestamp"] + \
+            (data["startTime"]["hour"] * 60 * 60) + \
+            (data["startTime"]["minute"] * 60), tz=pytz.timezone("Africa/Nairobi")),
+            "status": data["status"],
+            "appointment_type": data["appointmentType"]
+        }
+        serializer = AppointmentSerializer(appointment, data=obj, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)

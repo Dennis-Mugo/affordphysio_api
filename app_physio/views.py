@@ -63,8 +63,11 @@ def reset_password(request):
 @api_view(["POST"])
 def login(request):
     user = get_object_or_404(PhysioUser, email=request.data['email'])
-    user.is_active = True
-    user.save()
+    
+    if not user.is_active:
+        return Response({"detail": "This account has been deleted!"}, status=status.HTTP_200_OK)
+    
+    
     if not user.check_password(request.data['password']):
         return Response({"detail": "Email or password is incorrect"}, status=status.HTTP_404_NOT_FOUND)
     token, created = Token.objects.get_or_create(user=user)

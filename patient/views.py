@@ -319,6 +319,15 @@ def add_payment(request):
         return Response(serializer.data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(["POST"])
+def get_payments(request):
+    patient_id = request.data.get("patientId", False)
+    if not patient_id:
+        return Response({"detail": "PatientId is missing"}, status=status.HTTP_400_BAD_REQUEST)
+    payments = Payment.objects.filter(patient=patient_id)
+    serializer = PaymentSerializer(payments, many=True)
+    return Response(serializer.data, status.HTTP_200_OK)
+
 @api_view(["GET"])
 def get_available_physios(request):
     today = datetime.datetime.today().strftime('%Y-%m-%d')

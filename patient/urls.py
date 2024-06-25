@@ -25,6 +25,8 @@ urlpatterns = [
 
     path("get_services", views.get_services),
     path("add_payment", views.add_payment),
+    path("get_payments", views.get_payments),
+
 
 
 ]

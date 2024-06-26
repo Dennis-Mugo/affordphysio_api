@@ -241,7 +241,8 @@ def set_schedule(request):
     physio = request.user
     data = request.data
     request.data["physio"] = physio
-    request.data["date"] = datetime.date.fromtimestamp(data["dateTimestamp"])
+    # request.data["date"] = datetime.date.fromtimestamp(data["dateTimestamp"])
+    request.data["date"] = data["dateTimestamp"]
     request.data["start_time"] = datetime.time(hour=data["startTime"]["hour"], minute=data["startTime"]["minute"])
     request.data["end_time"] = datetime.time(hour=data["endTime"]["hour"], minute=data["endTime"]["minute"])
 

@@ -262,7 +262,7 @@ def get_schedule(request):
     serializer = PhysioScheduleSerializer(schedule_list, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
     
-@api_view(["POST"])
+@api_view(["GET"])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def get_incoming_appointments(request):
@@ -272,7 +272,7 @@ def get_incoming_appointments(request):
     data = get_patient_detail_appointments(serializer.data)
     return Response(data, status=status.HTTP_200_OK)
 
-@api_view(["POST"])
+@api_view(["GET"])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def get_accepted_appointments(request):

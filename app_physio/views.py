@@ -134,10 +134,11 @@ def verify_email_token(request, tokenId):
     return Response({"valid": token_valid}, status=status.HTTP_200_OK)
 
 
-@api_view(["POST"])
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def get_feedback(request):
-    physio_id = request.data["physioId"]
-    physio = get_object_or_404(PhysioUser, id=physio_id)
+    physio = request.user
     feedback_list = PatientFeedback.objects.filter(physiotherapist=physio)
     serializer = PatientFeedbackSerializer(feedback_list, many=True)
     data = get_patient_detail_appointments(serializer.data)
@@ -320,13 +321,15 @@ def add_post_visit(request):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(["POST"])
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def get_post_visit(request):
-    physio_id = request.data["physioId"]
-    physio = get_object_or_404(PhysioUser, id=physio_id)
+    physio = request.user
     post_visits = PostVisit.objects.filter(physio=physio)
     serializer = PostVisitSerializer(post_visits, many=True)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+    data = get_patient_detail_appointments(serializer.data)
+    return Response(data, status=status.HTTP_200_OK)
 
 
 

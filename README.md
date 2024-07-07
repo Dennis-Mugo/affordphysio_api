@@ -12,16 +12,16 @@ The telehealth management system bridges the gap between physiotherapists and pa
 
 # Installation Steps:
 1. Clone the repository from GitHub
-### bash
-git clone https://github.com/Dennis-Mugo/affordphysio_api.git
+```bash```
+```git clone https://github.com/Dennis-Mugo/affordphysio_api.git```
 
 
-2. Navigate to project folder
+3. Navigate to project folder
 bash
   cd affordphysio_api
 
 
-3. Install dependencies:
+4. Install dependencies:
 bash
 pip install -r requirements.txt
 

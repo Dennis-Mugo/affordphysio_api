@@ -12,23 +12,31 @@ The telehealth management system bridges the gap between physiotherapists and pa
 
 # Installation Steps:
 1. Clone the repository from GitHub
-```
-bash \n
-```
-
-```
-git clone https://github.com/Dennis-Mugo/affordphysio_api.git
-```
-
-
-3. Navigate to project folder
-bash
-  cd affordphysio_api
+  ```
+  bash
+  ```
+  
+  ```
+  git clone https://github.com/Dennis-Mugo/affordphysio_api.git
+  ```
 
 
-4. Install dependencies:
-bash
-pip install -r requirements.txt
+2. Navigate to project folder
+    ```
+    bash
+    ```
+    ```
+    cd affordphysio_api
+    ```
+
+
+3. Install dependencies:
+    ```
+    bash
+    ```
+    ```
+    pip install -r requirements.txt
+    ```
 
 ---
 # Usage Instructions
@@ -38,9 +46,12 @@ pip install -r requirements.txt
 
    
 2. Run the Flask application in the terminal
-
-bash
-python manage.py runserver
+   ```
+    bash
+   ```
+    ```
+    python manage.py runserver
+    ```
 
 
 3. Open a web browser and go to http://127.0.0.1:8000/ to view the application.

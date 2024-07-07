@@ -45,7 +45,7 @@ The telehealth management system bridges the gap between physiotherapists and pa
 1. Ensure you are in the project directory
 
    
-2. Run the Flask application in the terminal
+2. Run the Django application in the terminal
    ```
     bash
    ```
@@ -55,3 +55,20 @@ The telehealth management system bridges the gap between physiotherapists and pa
 
 
 3. Open a web browser and go to http://127.0.0.1:8000/ to view the application.
+
+## Project Structure:
+
+### Overview:
+
+The project consists of the following main components:
+- *app.py:* Main application entry point.
+- *templates/*: HTML templates for rendering web pages.
+- *static/*: Static files (e.g., CSS, images) used in the application.
+
+### Key Files:
+- *app.py*: Flask application setup and routes.
+- *forms.py*: Defines SQLAlchemy forms for registration, login and appointments
+- *models.py*: Defines SQLAlchemy models for pets, owners, appointments, etc.
+- *forms.py*: WTForms used for form validation and rendering.
+- *templates/*: Contains HTML templates using Jinja2 templating engine.
+- *static/*: CSS, images, and other static assets.

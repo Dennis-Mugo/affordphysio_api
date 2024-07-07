@@ -60,15 +60,17 @@ The telehealth management system bridges the gap between physiotherapists and pa
 
 ### Overview:
 
-The project consists of the following main components:
-- *app.py:* Main application entry point.
-- *templates/*: HTML templates for rendering web pages.
-- *static/*: Static files (e.g., CSS, images) used in the application.
+The project consists of the following main django apps:
+- *api/* Main application entry point.
+- *app_admin/*: Contains routes for admin module
+- *app_manager/*: Contains routes for manager module
+- *app_physio/*: Contains routes for physiotherapist module
+- *patient/*: Contains routes for patient module
 
 ### Key Files:
-- *app.py*: Flask application setup and routes.
-- *forms.py*: Defines SQLAlchemy forms for registration, login and appointments
-- *models.py*: Defines SQLAlchemy models for pets, owners, appointments, etc.
-- *forms.py*: WTForms used for form validation and rendering.
-- *templates/*: Contains HTML templates using Jinja2 templating engine.
-- *static/*: CSS, images, and other static assets.
+- *views.py*: Defines all the views for respective module
+- *urls.py*: Defines all the routes for respective module
+- *models.py*: Defines all Django models for respective module
+- *admin.py*: Registers the models to enable viewing on the django admin interface.
+- *serializers.py*: Serializes data to fit model format.
+

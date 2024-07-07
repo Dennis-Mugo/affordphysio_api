@@ -12,7 +12,7 @@ The telehealth management system bridges the gap between physiotherapists and pa
 
 # Installation Steps:
 1. Clone the repository from GitHub
-bash
+### bash
 git clone https://github.com/Dennis-Mugo/affordphysio_api.git
 
 

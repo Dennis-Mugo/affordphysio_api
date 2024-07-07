@@ -74,3 +74,10 @@ The project consists of the following main django apps:
 - *admin.py*: Registers the models to enable viewing on the django admin interface.
 - *serializers.py*: Serializes data to fit model format.
 
+## Acknowledgements
+
+ - [Markdown Cheatsheet](https://github.com/tchapi/markdown-cheatsheet/blob/master/README.md)
+
+## Contact Us
+
+For support,question or contribution email dennismthairu@gmail.com or create an issue in this repository. This is the fastest way to reach us.

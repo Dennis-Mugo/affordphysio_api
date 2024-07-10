@@ -283,6 +283,16 @@ def get_accepted_appointments(request):
     data = get_patient_detail_appointments(serializer.data)
     return Response(data, status=status.HTTP_200_OK)
 
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def get_completed_appointments(request):
+    physio = request.user
+    appointments = Appointment.objects.filter(physiotherapist=physio, status="completed")
+    serializer = AppointmentSerializer(appointments, many=True)
+    data = get_patient_detail_appointments(serializer.data)
+    return Response(data, status=status.HTTP_200_OK)
+
 @api_view(["POST"])
 def reschedule_appointment(request):
     appointment_id = request.data["appointmentId"]

@@ -331,7 +331,7 @@ def get_payments(request):
 @api_view(["GET"])
 def get_available_physios(request):
     today = datetime.datetime.today().strftime('%Y-%m-%d')
-    schedules = PhysioSchedule.objects.filter(date=today)
+    schedules = PhysioSchedule.objects.filter(date__gte=today)
     serializer = PhysioScheduleSerializer(schedules, many=True)
     physio_ids = [physio["physio"] for physio in serializer.data]
     physio_ids = list(set(physio_ids))

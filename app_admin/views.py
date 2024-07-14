@@ -32,8 +32,8 @@ def admin_list(request):
     #serialize them
     #return json
     if request.method == 'GET':
-        admins = AppAdmin.objects.all()
-        serializer = AppAdminSerializer(admins, many=True)
+        admins = AdminUser.objects.all()
+        serializer = AdminUserSerializer(admins, many=True)
         return JsonResponse(serializer.data, safe=False)
     
     if request.method == 'POST':

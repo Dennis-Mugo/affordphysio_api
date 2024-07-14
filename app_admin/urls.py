@@ -3,7 +3,7 @@ from django.urls import path, include
 from app_admin import views
 
 urlpatterns = [
-    path('admins/', views.admin_list),
+    path('admins', views.admin_list),
     path('signup_verify', views.signup_verify),
     path('signup_set_password', views.signup_set_password),
     path('forgot_password', views.forgot_password_send_email),

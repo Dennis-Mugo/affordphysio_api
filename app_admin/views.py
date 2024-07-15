@@ -215,7 +215,7 @@ def add_manager(request):
         "first_name": request.data["first_name"],
         "last_name": request.data["last_name"],
         "username": request.data["first_name"]+request.data['last_name'],
-        "password": "amref"
+        "password": "amreff"
     }
     serializer = ManagerUserSerializer(data=data_obj)
     if serializer.is_valid():

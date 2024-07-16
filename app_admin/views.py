@@ -34,7 +34,7 @@ def admin_list(request):
     if request.method == 'GET':
         admins = AdminUser.objects.all()
         serializer = AdminUserSerializer(admins, many=True)
-        return JsonResponse(serializer.data, safe=False)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     
     if request.method == 'POST':
         serializer = AppAdminSerializer(data=request.data)
@@ -215,7 +215,7 @@ def add_manager(request):
         "first_name": request.data["first_name"],
         "last_name": request.data["last_name"],
         "username": request.data["first_name"]+request.data['last_name'],
-        "password": "amreff"
+        "password": "amref"
     }
     serializer = ManagerUserSerializer(data=data_obj)
     if serializer.is_valid():

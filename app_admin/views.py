@@ -61,7 +61,7 @@ def signup_verify(request):
         )
         return Response({"success": True}, status=status.HTTP_200_OK)
     
-    data = request.data | {"username": request.data["first_name"] + request.data["last_name"], "password": "amref"}
+    data = request.data | {"username": request.data["first_name"] + request.data["last_name"], "password": "amreff"}
     
     serializer = AdminUserSerializer(data=data)
     if serializer.is_valid():

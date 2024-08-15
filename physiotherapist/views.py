@@ -1,8 +1,15 @@
+import datetime
+
+from django.db.models import Q
+from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
+from app_physio.models import PhysioUser, PhysioSchedule
+from app_physio.serializers import PhysioUserSerializer, PhysioScheduleSerializer
 from manager.views import make_request
 from physiotherapist.models import Physiotherapist
 
@@ -19,7 +26,6 @@ class LoginPhysiotherapistView(ObtainAuthToken):
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data,
                                            context={'request': request})
-
 
         def make_login_internal(req):
             serializer.is_valid(raise_exception=True)
@@ -44,3 +50,65 @@ class LoginPhysiotherapistView(ObtainAuthToken):
 
         return make_request(request, make_login_internal)
 
+
+@api_view(['GET'])
+def get_single_physio_details(request):
+    def get_single_physio_internal(req):
+        physio_id = req.GET["id"]
+
+        # first get the physio
+        physio = get_object_or_404(PhysioUser, id=physio_id)
+        physio_serializer = PhysioUserSerializer(physio, many=False)
+
+        # then get schedules
+        today = datetime.datetime.today().strftime('%Y-%m-%d')
+        physio = get_object_or_404(PhysioUser, id=physio_id)
+        schedule_list = PhysioSchedule.objects.filter(physio=physio, date__gte=today)
+        serializer = PhysioScheduleSerializer(schedule_list, many=True)
+
+        response = {
+            "status": status.HTTP_200_OK,
+            "status_description": "OK",
+            "errors": None,
+            "data": {
+                "user": physio_serializer.data,
+                "schedules": serializer.data
+            }
+        }
+        return Response(response, status=status.HTTP_200_OK)
+
+    return make_request(request, get_single_physio_internal)
+
+
+@api_view(["GET"])
+def get_available_physios(request):
+    def get_available_physio_internal(req):
+        data = None
+        filter_ = request.query_params.get("filter", None)
+        if filter_ is None or filter_ == "":
+            data = PhysioUser.objects.all()
+        else:
+            filter_ = request.query_params.get("filter", None)
+            data = PhysioUser.objects.filter(Q(first_name__contains=filter_) |
+                                             Q(last_name__contains=filter_) |
+                                             Q(username__contains=filter_) |
+                                             Q(email__contains=filter_))
+
+            # limit query
+        limit = request.query_params.get("limit", None)
+        if limit is not None and isinstance(limit, str) and limit.isdigit() and int(limit) > 0:
+            data = data[:int(limit)]
+        else:
+            # limit to first 50 queries
+            data = data[:50]
+
+        physio_serializer = PhysioUserSerializer(data, many=True)
+        response = {
+            "status": status.HTTP_200_OK,
+            "status_description": "OK",
+            "errors": None,
+            "data": physio_serializer.data
+        }
+        return Response(response, status=status.HTTP_200_OK)
+
+    return make_request(request, get_available_physio_internal)

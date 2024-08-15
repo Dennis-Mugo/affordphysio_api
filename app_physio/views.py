@@ -341,6 +341,3 @@ def get_post_visit(request):
     data = get_patient_detail_appointments(serializer.data)
     return Response(data, status=status.HTTP_200_OK)
 
-
-
-

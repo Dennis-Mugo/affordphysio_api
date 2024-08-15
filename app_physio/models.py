@@ -13,23 +13,24 @@ class PhysioUser(User):
     years_of_experience = models.IntegerField(null=True)
     specialty = models.TextField(null=True)
     pck_number = models.IntegerField(null=True)
+    description = models.TextField(null=False, default="")
 
     def __str__(self):
         return str(self.id) + " " + self.first_name
-    
+
 
 class PhysioLog(models.Model):
-    id = models.UUIDField( 
-         primary_key = True, 
-         default = uuid.uuid4, 
-         editable = False),
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False),
     timestamp = models.DateTimeField(null=True)
     activity = models.CharField(null=True, max_length=50)
     physio = models.ForeignKey(PhysioUser, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.activity
-    
+
 
 class PhysioSchedule(models.Model):
     date = models.DateField(null=True)
@@ -40,7 +41,8 @@ class PhysioSchedule(models.Model):
 
     def __str__(self):
         return str(self.id) + self.appointment_type
-    
+
+
 class PostVisit(models.Model):
     patient = models.IntegerField(null=False)
     physio = models.ForeignKey(PhysioUser, on_delete=models.CASCADE)

@@ -1,6 +1,6 @@
 import datetime
 
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.authtoken.views import ObtainAuthToken
@@ -95,13 +95,8 @@ def get_available_physios(request):
                                              Q(username__contains=filter_) |
                                              Q(email__contains=filter_))
 
-            # limit query
-        limit = request.query_params.get("limit", None)
-        if limit is not None and isinstance(limit, str) and limit.isdigit() and int(limit) > 0:
-            data = data[:int(limit)]
-        else:
-            # limit to first 50 queries
-            data = data[:50]
+        # limit query
+        data = limit_query(data, limit=request.query_params.get("limit", None))
 
         physio_serializer = PhysioUserSerializer(data, many=True)
         response = {
@@ -122,16 +117,31 @@ def add_physio_category(request):
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        response_data = {"status": status.HTTP_201_CREATED, "status_description": "OK", "errors": None, "data": None}
+        response_data = {"status": status.HTTP_201_CREATED,
+                         "status_description": "OK",
+                         "errors": None,
+                         "data": None}
         return Response(response_data, status=status.HTTP_201_CREATED)
 
     return make_request(request, add_physio_category_inner)
+
+
+def limit_query(query: QuerySet, limit):
+    # Limit query
+    data = query
+    if limit is not None and isinstance(limit, str) and limit.isdigit() and int(limit) > 0:
+        data = query[:int(limit)]
+
+    return data
 
 
 @api_view(["GET"])
 def get_physio_categories(request):
     def get_physio_categories_internal(req):
         data = PhysiotherapistCategories.objects.all()
+        # Limit query
+        data = limit_query(data, limit=request.query_params.get("limit", None))
+
         serializer = PhysioCategoriesSerializer(data, many=True)
 
         response_data = {"status": status.HTTP_200_OK,
@@ -141,3 +151,19 @@ def get_physio_categories(request):
         return Response(response_data, status=status.HTTP_200_OK)
 
     return make_request(request, get_physio_categories_internal)
+
+
+@api_view(["GET"])
+def get_physios_for_category(request):
+    def get_physios_for_category_internal(req):
+        category_id = req.GET["id"]
+        # get the category id of the
+        physio_categories = PhysioUser.objects.filter(category_id=category_id)
+
+        physio_serializer = PhysioUserSerializer(physio_categories, many=True)
+        response_data = {"status": status.HTTP_200_OK, "status_description": "OK",
+                         "errors": None,
+                         "data": physio_serializer.data}
+        return Response(response_data, status=status.HTTP_200_OK)
+
+    return make_request(request, get_physios_for_category_internal)

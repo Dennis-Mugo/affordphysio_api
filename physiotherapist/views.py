@@ -11,7 +11,8 @@ from rest_framework.response import Response
 from app_physio.models import PhysioUser, PhysioSchedule
 from app_physio.serializers import PhysioUserSerializer, PhysioScheduleSerializer
 from manager.views import make_request
-from physiotherapist.models import Physiotherapist
+from physiotherapist.app_serializers import PhysioCategoriesSerializer
+from physiotherapist.models import Physiotherapist, PhysiotherapistCategories
 
 
 # Create your views here.
@@ -112,3 +113,31 @@ def get_available_physios(request):
         return Response(response, status=status.HTTP_200_OK)
 
     return make_request(request, get_available_physio_internal)
+
+
+@api_view(["POST"])
+def add_physio_category(request):
+    def add_physio_category_inner(req):
+        serializer = PhysioCategoriesSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        response_data = {"status": status.HTTP_201_CREATED, "status_description": "OK", "errors": None, "data": None}
+        return Response(response_data, status=status.HTTP_201_CREATED)
+
+    return make_request(request, add_physio_category_inner)
+
+
+@api_view(["GET"])
+def get_physio_categories(request):
+    def get_physio_categories_internal(req):
+        data = PhysiotherapistCategories.objects.all()
+        serializer = PhysioCategoriesSerializer(data, many=True)
+
+        response_data = {"status": status.HTTP_200_OK,
+                         "status_description": "OK",
+                         "errors": None,
+                         "data": serializer.data}
+        return Response(response_data, status=status.HTTP_200_OK)
+
+    return make_request(request, get_physio_categories_internal)

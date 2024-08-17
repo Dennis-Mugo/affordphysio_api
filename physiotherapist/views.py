@@ -8,6 +8,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
+from api.utils import create_token
 from app_physio.models import PhysioUser, PhysioSchedule
 from app_physio.serializers import PhysioUserSerializer, PhysioScheduleSerializer
 from manager.views import make_request
@@ -22,7 +23,6 @@ class LoginPhysiotherapistView(ObtainAuthToken):
     # permission_classes = [
     #     permissions.AllowAny  # Or anon users can't register
     # ]
-    # serializer_class = ManagerSerializer
 
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data,
@@ -31,10 +31,11 @@ class LoginPhysiotherapistView(ObtainAuthToken):
         def make_login_internal(req):
             serializer.is_valid(raise_exception=True)
             user: Physiotherapist = serializer.validated_data['user']
-            token, created = Token.objects.get_or_create(user=user)
 
             # confirm a physiotherapist with the details is present
             Physiotherapist.objects.get(id=user.id)
+
+            token, created = Token.objects.get_or_create(user=user)
 
             response_data = {"status": status.HTTP_200_OK,
                              "status_description": "OK",

@@ -15,6 +15,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 
+from api.utils import create_token
 from manager.app_serializers import ManagerSerializer, PhysioSerializerInManagerModule
 from manager.models import Manager
 from physiotherapist.models import Physiotherapist
@@ -33,22 +34,7 @@ class CreateManagerView(CreateAPIView):
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             self.perform_create(serializer)
-
-            headers = self.get_success_headers(serializer.data)
-            token, created = Token.objects.get_or_create(user=serializer.instance)
-            response_data = {"status": status.HTTP_201_CREATED,
-                             "status_description": "CREATED",
-                             "errors": None,
-                             "data": {'auth_token': token.key,
-                                      "id": serializer.data["id"],
-                                      'username': serializer.data["username"],
-                                      'email': serializer.data["email"],
-                                      'first_name': serializer.data["first_name"],
-                                      'last_name': serializer.data["last_name"],
-                                      }}
-
-            return Response(response_data,
-                            status=status.HTTP_201_CREATED, headers=headers)
+            return create_token(serializer)
 
         return make_request(request, make_signup_internal)
 
@@ -68,9 +54,10 @@ class LoginManagerView(ObtainAuthToken):
         def make_login_internal(req):
             serializer.is_valid(raise_exception=True)
             user: Manager = serializer.validated_data['user']
-            token, created = Token.objects.get_or_create(user=user)
             # confirm a manager with the details is present
             Manager.objects.get(id=user.id)
+
+            token, created = Token.objects.get_or_create(user=user)
 
             response_data = {"status": status.HTTP_200_OK,
                              "status_description": "OK",
@@ -157,7 +144,6 @@ def add_physiotherapist(request: django.http.HttpRequest):
     return make_request(request, add_physiotherapist_inner)
 
 
-@api_view(['GET'])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def get_physiotherapists_for_manager(request: django.http.HttpRequest):

@@ -173,6 +173,70 @@ def get_feedback(request):
     return Response(data, status=status.HTTP_200_OK)
 
 
+@api_view(["POST"])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def make_appointment(request):
+    def make_appointment_internal(req):
+        user: User = request.user
+        patient: Patient = Patient.objects.get(id=user.id)
+
+        data = request.data
+
+        physio_id = data["physio_id"]
+
+        physio = PhysioUser.objects.get(id=physio_id)
+
+        start_time = datetime.datetime.fromisoformat(data["start_time"])
+        end_time = datetime.datetime.fromisoformat(data["end_time"])
+        if end_time.timestamp() < start_time.timestamp():
+            raise Exception("End time cannot be earlier than start time")
+
+        obj = {
+            "patient": patient,
+            "physiotherapist": physio,
+            "start_time": start_time,
+            "end_time": end_time,
+            "status": 1,
+            "appointment_type": data["appointment_type"],
+        }
+
+        serializer = AppointmentSerializer(data=obj)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        response = {
+            "status": status.HTTP_201_CREATED,
+            "status_description": "CREATED",
+            "errors": None,
+            "data": serializer.data
+        }
+
+        return Response(response, status=status.HTTP_201_CREATED)
+
+    # return make_appointment_internal(request)
+    return make_request(request, make_appointment_internal)
+
+
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def get_patient_upcoming_appointments(request):
+    def get_patient_appointments_internal(req):
+        user: User = request.user
+        patient: Patient = Patient.objects.get(id=user.id)
+        appointments = Appointment.objects.filter(patient=patient, start_time__gte=datetime.datetime.now())
+        serializer = AppointmentSerializer(appointments, many=True)
+        data = {
+            "status": status.HTTP_201_CREATED,
+            "status_description": "CREATED",
+            "errors": None,
+            "data": serializer.data
+        }
+        return Response(data, status=status.HTTP_200_OK)
+
+    return make_request(request, get_patient_appointments_internal)
+
+
 @api_view(["PUT", "POST", "PATCH"])
 def appointments(request):
     if request.method == "PUT":

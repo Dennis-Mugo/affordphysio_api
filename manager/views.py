@@ -16,6 +16,7 @@ from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 
 from api.utils import create_token
+from app_physio.models import PhysioUser
 from app_physio.serializers import PhysioUserSerializer
 from manager.app_serializers import ManagerSerializer, PhysioSerializerInManagerModule
 from manager.models import Manager
@@ -104,8 +105,8 @@ def get_physiotherapist_for_manager_inner(request: django.http.HttpRequest):
     # this means the user is not a manager
     manager: Manager = Manager.objects.get(id=user.id)
     # get the physiotherapists that the manager created
-    physiotherapist = Physiotherapist.objects.filter(created_by=manager)
-    serializer = PhysioSerializerInManagerModule(many=True, data=physiotherapist, show_created_by=False)
+    physiotherapist = PhysioUser.objects.filter(created_by=manager)
+    serializer = PhysioUserSerializer(many=True, data=physiotherapist, show_created_by=False)
     serializer.show_created_by = False
     serializer.is_valid()
     return Response({"status": status.HTTP_200_OK,
@@ -133,7 +134,7 @@ def make_request(request: django.http.HttpRequest, function):
     except Exception as e:
         response_data = {"status": status.HTTP_500_INTERNAL_SERVER_ERROR,
                          "status_description": "Internal server error",
-                         "errors": {"exception": [f"${e}"]},
+                         "errors": {"exception": [f"{e}"]},
                          "data": None}
         return Response(response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -145,6 +146,7 @@ def add_physiotherapist(request: django.http.HttpRequest):
     return make_request(request, add_physiotherapist_inner)
 
 
+@api_view(['GET'])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def get_physiotherapists_for_manager(request: django.http.HttpRequest):

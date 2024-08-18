@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 import uuid
 from app_physio.models import PhysioUser
 
+
 # Create your models here.
 class Patient(User):
     # patientId = models.UUIDField(
@@ -25,25 +26,26 @@ class Patient(User):
 
     def __str__(self):
         return str(self.id) + " " + self.email
-    
+
 
 class PatientLog(models.Model):
-    id = models.UUIDField( 
-         primary_key = True, 
-         default = uuid.uuid4, 
-         editable = False),
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False),
     timestamp = models.DateTimeField(null=True)
     activity = models.CharField(null=True, max_length=50)
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.activity
-    
+
+
 class PatientFeedback(models.Model):
-    id = models.UUIDField( 
-         primary_key = True, 
-         default = uuid.uuid4, 
-         editable = False)
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False)
     timestamp = models.DateTimeField(null=True)
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
     physiotherapist = models.ForeignKey(PhysioUser, on_delete=models.CASCADE, default=24)
@@ -52,30 +54,32 @@ class PatientFeedback(models.Model):
 
     def __str__(self):
         return self.patient.email + " " + self.comments[:10]
-    
+
 
 class Appointment(models.Model):
     # id = models.UUIDField( 
     #      primary_key = True, 
     #      default = uuid.uuid4, 
     #      editable = False)
-    timestamp = models.DateTimeField(null=True)
-    end_time = models.TimeField(null=True)
+    start_time = models.DateTimeField(null=False)
+    end_time = models.DateTimeField(null=False)
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
-    physiotherapist = models.ForeignKey(PhysioUser, on_delete=models.CASCADE, default=24)
-    status = models.CharField(null=True, max_length=50)
-    appointment_type = models.CharField(null=True, max_length=50)
+    physiotherapist = models.ForeignKey(PhysioUser, on_delete=models.CASCADE)
+    status = models.CharField(null=False, max_length=50)
+    appointment_type = models.CharField(null=False, max_length=50)
     created_date = models.DateTimeField(auto_now_add=True)
     modified_date = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.patient.first_name + " " + self.status
 
+
 class Penalty(models.Model):
     penalty_type = models.CharField(null=True, max_length=50)
     fine_percentage = models.IntegerField(null=True)
     duration = models.BigIntegerField(null=True)
-    #Duration in seconds before the appointment/duration in seconds that the physio is late
+    # Duration in seconds before the appointment/duration in seconds that the physio is late
+
 
 class AppointmentCancellation(models.Model):
     timestamp = models.DateTimeField(null=True)
@@ -83,15 +87,9 @@ class AppointmentCancellation(models.Model):
     reason = models.TextField(null=True)
     penalty = models.ForeignKey(Penalty, on_delete=models.CASCADE, null=True)
 
+
 class Payment(models.Model):
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
     code = models.CharField(max_length=50, null=True)
     status = models.CharField(max_length=50, null=True)
     timestamp = models.DateTimeField(auto_now_add=True)
-
-
-
-
-
-
-    

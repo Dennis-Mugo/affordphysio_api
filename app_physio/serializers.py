@@ -1,19 +1,21 @@
 from rest_framework import serializers
 
 from manager.app_serializers import ManagerSerializer
+from physiotherapist.app_serializers import PhysioCategoriesSerializer
 from .models import PhysioUser, PhysioLog, PhysioSchedule, PostVisit
 from django.contrib.auth.models import User
 
 
 class PhysioUserSerializer(serializers.ModelSerializer):
     created_by = ManagerSerializer(many=False, read_only=True)
-
+    category = PhysioCategoriesSerializer(many=False, read_only=True)
     show_created_by = True
 
     class Meta:
         model = PhysioUser
         fields = ("id", "username", "email", "password", "first_name", "last_name", "created_date", "modified_date",
-                  "created_by", "is_active", "last_login")
+                  "created_by", "is_active", "last_login", "specialty", "pck_number", "phone_number", "gender",
+                  "education", "years_of_experience", "description", "category")
         write_only_fields = ("password",)
         read_only_fields = ("id", "created_date", "modified_date",)
 
@@ -25,8 +27,6 @@ class PhysioUserSerializer(serializers.ModelSerializer):
         """
         super().__init__(**kwargs)
         self.show_created_by = show_created_by
-
-
 
     def create(self, validated_data):
         physiotherapist: PhysioUser = PhysioUser.objects.create(

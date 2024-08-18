@@ -16,6 +16,7 @@ from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 
 from api.utils import create_token
+from app_physio.serializers import PhysioUserSerializer
 from manager.app_serializers import ManagerSerializer, PhysioSerializerInManagerModule
 from manager.models import Manager
 from physiotherapist.models import Physiotherapist
@@ -75,13 +76,13 @@ class LoginManagerView(ObtainAuthToken):
         return make_request(request, make_login_internal)
 
 
-def add_physiotherapist_inner(request: django.http.HttpRequest):
+def add_physiotherapist_inner(request):
     # the currently logged in user
     user: User = request.user
     # check if the user is a manager, if the get fails
     # this means the user is not a manager
     manager: Manager = Manager.objects.get(id=user.id)
-    serializer = PhysioSerializerInManagerModule(data=request.data)
+    serializer = PhysioUserSerializer(data=request.data)
     serializer.created_by = manager
     serializer.is_valid(raise_exception=True)
     serializer.save()

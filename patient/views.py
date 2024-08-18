@@ -101,13 +101,16 @@ def test_token(request):
     return Response({"user": serializer.data}, status=status.HTTP_200_OK)
 
 
-@api_view(["POST"])
+@api_view(["GET", "POST"])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def logout(request):
-    request.user.auth_token.delete()
-    log = add_patient_log("Logged out", request.user)
-    return Response({"success": True}, status=status.HTTP_200_OK)
+    def logout_internal(req):
+        request.user.auth_token.delete()
+        log = add_patient_log("Logged out", request.user)
+        return Response({"success": True}, status=status.HTTP_200_OK)
+
+    return make_request(request, logout_internal)
 
 
 @api_view(["GET", "PUT"])

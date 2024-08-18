@@ -2,11 +2,13 @@ from django.db import models
 from django.contrib.auth.models import User
 import uuid
 
+from manager.models import Manager
 from physiotherapist.models import PhysiotherapistCategories
 
 
 # Create your models here.
 class PhysioUser(User):
+    created_by = models.ForeignKey(Manager, on_delete=models.RESTRICT, related_name="+")
     gender = models.CharField(max_length=50, null=True)
     id_number = models.CharField(max_length=50, null=True)
     date_of_birth = models.DateTimeField(null=True)
@@ -17,6 +19,9 @@ class PhysioUser(User):
     pck_number = models.IntegerField(null=True)
     description = models.TextField(null=False, default="")
     category = models.ForeignKey(PhysiotherapistCategories, on_delete=models.SET_NULL, blank=True, null=True)
+
+    created_date = models.DateTimeField(auto_now_add=True)
+    modified_date = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return str(self.id) + " " + self.first_name

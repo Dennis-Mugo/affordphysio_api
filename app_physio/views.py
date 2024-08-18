@@ -15,7 +15,6 @@ from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 
-
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -26,7 +25,6 @@ import pytz
 import time
 
 
-
 @api_view(["POST"])
 def signup_set_password(request):
     email = request.data["email"]
@@ -35,6 +33,7 @@ def signup_set_password(request):
     user.save()
     serializer = PhysioUserSerializer(user)
     return Response(serializer.data, status=status.HTTP_201_CREATED)
+
 
 @api_view(["POST"])
 def forgot_password_send_email(request):
@@ -51,6 +50,7 @@ def forgot_password_send_email(request):
     )
     return Response({"success": True}, status=status.HTTP_200_OK)
 
+
 @api_view(["POST"])
 def reset_password(request):
     email = request.data["email"]
@@ -60,13 +60,13 @@ def reset_password(request):
     user.save()
     return Response({"success": True}, status=status.HTTP_200_OK)
 
+
 @api_view(["POST"])
 def login(request):
     user = get_object_or_404(PhysioUser, email=request.data['email'])
-    
+
     if not user.is_active:
         return Response({"detail": "This account has been deleted!"}, status=status.HTTP_200_OK)
-    
 
     if not user.check_password(request.data['password']):
         return Response({"detail": "Email or password is incorrect"}, status=status.HTTP_404_NOT_FOUND)
@@ -77,9 +77,9 @@ def login(request):
     if log != True:
         print(log)
         return Response(log, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
-    
+
     return Response({'token': token.key, 'user': serializer.data}, status=status.HTTP_201_CREATED)
+
 
 @api_view(["GET"])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
@@ -91,9 +91,7 @@ def test_token(request):
 
 @api_view(["POST"])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
-
 @permission_classes([IsAuthenticated])
-
 def logout(request):
     request.user.auth_token.delete()
     log = add_physio_log("Logged out", request.user)
@@ -102,6 +100,7 @@ def logout(request):
         return Response(log, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     return Response({"success": True}, status=status.HTTP_200_OK)
 
+
 @api_view(["GET", "PUT"])
 def physio_profile(request, physioId):
     user = get_object_or_404(PhysioUser, id=physioId)
@@ -109,13 +108,14 @@ def physio_profile(request, physioId):
     if request.method == "GET":
         serializer = PhysioUserSerializer(instance=user)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
+
     elif request.method == "PUT":
         serializer = PhysioUserSerializer(user, request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(["GET"])
 def verify_email_token(request, tokenId):
@@ -127,8 +127,8 @@ def verify_email_token(request, tokenId):
 
     epoch_created_seconds = dt_created.timestamp()
     now_epoch_seconds = int(time.time())
-    
-    token_expiry_duration = 10 * 60 #Token expires in 10 minutes
+
+    token_expiry_duration = 10 * 60  # Token expires in 10 minutes
     token_valid = now_epoch_seconds - epoch_created_seconds < token_expiry_duration
 
     return Response({"valid": token_valid}, status=status.HTTP_200_OK)
@@ -144,7 +144,8 @@ def get_feedback(request):
     data = get_patient_detail_appointments(serializer.data)
     return Response(data, status=status.HTTP_200_OK)
 
-@api_view(["PUT","POST", "PATCH"])
+
+@api_view(["PUT", "POST", "PATCH"])
 def appointments(request):
     # if request.method == "PUT":
     #     data = request.data
@@ -160,13 +161,13 @@ def appointments(request):
     #         serializer.save()
     #         return Response(serializer.data, status=status.HTTP_201_CREATED)
     #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
     # elif request.method == "POST":
     #     patient = get_object_or_404(Patient, id=request.data["patientId"])
     #     appointments = Appointment.objects.filter(patient=patient)
     #     serializer = AppointmentSerializer(appointments, many=True)
     #     return Response(serializer.data, status=status.HTTP_200_OK)
-    
+
     if request.method == "PATCH":
         appointment_id = request.data["appointmentId"]
         appointment = get_object_or_404(Appointment, id=appointment_id)
@@ -175,7 +176,8 @@ def appointments(request):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
+
 @api_view(["POST"])
 def cancel_appointment(request):
     data = request.data
@@ -183,7 +185,6 @@ def cancel_appointment(request):
     physio = get_object_or_404(PhysioUser, id=data["physioId"])
     patient = get_object_or_404(Patient, id=data["patientId"])
 
-    
     serializer = AppointmentSerializer(appointment)
     date_scheduled = serializer.data['timestamp']
     dt_scheduled = datetime.datetime.fromisoformat(date_scheduled.replace('Z', '+00:00'))
@@ -191,7 +192,7 @@ def cancel_appointment(request):
     epoch_scheduled_seconds = dt_scheduled.timestamp()
     now_epoch_seconds = int(time.time())
 
-    appointment_cancel_duration = 6 * 60 * 60 #Appointment can only be cancelled more than 6 hours prior
+    appointment_cancel_duration = 6 * 60 * 60  # Appointment can only be cancelled more than 6 hours prior
     is_penalty = epoch_scheduled_seconds - now_epoch_seconds < appointment_cancel_duration
 
     # if is_penalty:
@@ -202,7 +203,6 @@ def cancel_appointment(request):
     #     })
     #     if serializer.is_valid():
     #         serializer.save()
-            
 
     cancel_obj = {
         "timestamp": datetime.datetime.fromtimestamp(data["timestamp"]),
@@ -217,7 +217,7 @@ def cancel_appointment(request):
         serializer.save()
     else:
         print(serializer.errors)
-    
+
     serializer = AppointmentSerializer(appointment, data={"status": "cancelled"}, partial=True)
 
     if serializer.is_valid():
@@ -225,16 +225,16 @@ def cancel_appointment(request):
         obj = serializer.data
         # if is_penalty: obj["penalty"] = 30
         send_mail(
-        'Afford Physio Appointment Cancellation',
-        f'Your appointment with {physio.first_name + " " + physio.last_name} has been cancelled due to the following reason:\n\n{data["reason"]}',
-        'dennismthairu@gmail.com',
-        [patient.email],
-        fail_silently=False,
-    )
+            'Afford Physio Appointment Cancellation',
+            f'Your appointment with {physio.first_name + " " + physio.last_name} has been cancelled due to the following reason:\n\n{data["reason"]}',
+            'dennismthairu@gmail.com',
+            [patient.email],
+            fail_silently=False,
+        )
         return Response(obj, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    
+
 @api_view(["POST"])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
@@ -253,7 +253,8 @@ def set_schedule(request):
         return Response(serializer.data, status=status.HTTP_200_OK)
     else:
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
+
 @api_view(["GET"])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
@@ -262,7 +263,8 @@ def get_schedule(request):
     schedule_list = PhysioSchedule.objects.filter(physio=physio)
     serializer = PhysioScheduleSerializer(schedule_list, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
-    
+
+
 @api_view(["GET"])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
@@ -272,6 +274,7 @@ def get_incoming_appointments(request):
     serializer = AppointmentSerializer(appointments, many=True)
     data = get_patient_detail_appointments(serializer.data)
     return Response(data, status=status.HTTP_200_OK)
+
 
 @api_view(["GET"])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
@@ -283,6 +286,7 @@ def get_accepted_appointments(request):
     data = get_patient_detail_appointments(serializer.data)
     return Response(data, status=status.HTTP_200_OK)
 
+
 @api_view(["GET"])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
@@ -293,6 +297,7 @@ def get_completed_appointments(request):
     data = get_patient_detail_appointments(serializer.data)
     return Response(data, status=status.HTTP_200_OK)
 
+
 @api_view(["POST"])
 def reschedule_appointment(request):
     appointment_id = request.data["appointmentId"]
@@ -302,10 +307,10 @@ def reschedule_appointment(request):
         # request.data["date"] = datetime.date.fromtimestamp(data["dateTimestamp"])
         # request.data["start_time"] = datetime.time(hour=data["startTime"]["hour"], minute=data["startTime"]["minute"])
         # request.data["end_time"] = datetime.time(hour=data["endTime"]["hour"], minute=data["endTime"]["minute"])
-        
+
         request.data["timestamp"] = datetime.datetime.fromtimestamp(data["dateTimestamp"] + \
-        (data["startTime"]["hour"] * 60 * 60) + \
-        (data["startTime"]["minute"] * 60))
+                                                                    (data["startTime"]["hour"] * 60 * 60) + \
+                                                                    (data["startTime"]["minute"] * 60))
         request.data["end_time"] = datetime.time(hour=data["endTime"]["hour"], minute=data["endTime"]["minute"])
         serializer = AppointmentSerializer(appointment, data=request.data, partial=True)
         if serializer.is_valid():
@@ -314,7 +319,8 @@ def reschedule_appointment(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     else:
         return Response({"error": "one of the required field values is missing"}, status=status.HTTP_400_BAD_REQUEST)
-    
+
+
 @api_view(["POST"])
 def add_post_visit(request):
     data = request.data
@@ -331,6 +337,7 @@ def add_post_visit(request):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 @api_view(["GET"])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
@@ -340,4 +347,3 @@ def get_post_visit(request):
     serializer = PostVisitSerializer(post_visits, many=True)
     data = get_patient_detail_appointments(serializer.data)
     return Response(data, status=status.HTTP_200_OK)
-

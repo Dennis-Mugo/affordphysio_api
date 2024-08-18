@@ -30,10 +30,10 @@ class LoginPhysiotherapistView(ObtainAuthToken):
 
         def make_login_internal(req):
             serializer.is_valid(raise_exception=True)
-            user: Physiotherapist = serializer.validated_data['user']
+            user: PhysioUser = serializer.validated_data['user']
 
             # confirm a physiotherapist with the details is present
-            Physiotherapist.objects.get(id=user.id)
+            PhysioUser.objects.get(id=user.id)
 
             token, created = Token.objects.get_or_create(user=user)
 

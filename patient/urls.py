@@ -13,11 +13,13 @@ urlpatterns = [
     path('profile/<int:patientId>', views.patient_profile),
     path('logout', views.logout),
 
-    path('add_feedback', views.add_feedback),
+    path('v1/add_feedback', views.add_feedback),
     path("get_feedback", views.get_feedback),
 
     path("v1/make_appointment", views.make_appointment),
-    path("v1/upcoming_appointments",views.get_patient_upcoming_appointments),
+    path("v1/upcoming_appointments", views.get_patient_upcoming_appointments),
+    path("v1/cancel_appointment", views.cancel_patient_upcoming_appointment),
+    path("v1/reschedule_appointment", views.reschedule_patient_upcoming_appointment),
     path("appointments", views.appointments),
     path("cancel_appointment", views.cancel_appointment),
 

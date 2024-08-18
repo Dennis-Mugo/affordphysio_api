@@ -147,20 +147,34 @@ def verify_email_token(request, tokenId):
 
 
 @api_view(["POST"])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def add_feedback(request):
-    data = request.data
-    data_obj = {
-        "patient": get_object_or_404(Patient, id=data["patientId"]),
-        "physiotherapist": get_object_or_404(PhysioUser, id=data["physioId"]),
-        "comments": data['comments'],
-        "rating": data["rating"],
-        "timestamp": datetime.datetime.fromtimestamp(data["timestamp"])
-    }
-    serializer = PatientFeedbackSerializer(data=data_obj)
-    if serializer.is_valid():
+    def add_feedback_internal(req):
+        user: User = request.user
+        patient: Patient = Patient.objects.get(id=user.id)
+        data = request.data
+
+        data_obj = {
+            "patient": patient,
+            "physiotherapist": get_object_or_404(PhysioUser, id=data["physio_id"]),
+            "comments": data['comments'],
+            "rating": data["rating"],
+            "timestamp": datetime.datetime.now()
+        }
+        serializer = PatientFeedbackSerializer(data=data_obj)
+        serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response({"success": True}, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        data = {
+            "status": status.HTTP_200_OK,
+            "status_description": "OK",
+            "errors": None,
+            "data": serializer.data
+        }
+
+        return Response(data, status=status.HTTP_201_CREATED)
+    return make_request(request, add_feedback_internal)
 
 
 @api_view(["POST"])
@@ -224,17 +238,87 @@ def get_patient_upcoming_appointments(request):
     def get_patient_appointments_internal(req):
         user: User = request.user
         patient: Patient = Patient.objects.get(id=user.id)
-        appointments = Appointment.objects.filter(patient=patient, start_time__gte=datetime.datetime.now())
-        serializer = AppointmentSerializer(appointments, many=True)
+
+        status_ = request.query_params.get("status", None)
+        upcoming_ = request.query_params.get("upcoming", None)
+
+        if status_ is None or status_ == "":
+            appointments_ = Appointment.objects.filter(patient=patient)
+
+        else:
+            appointments_ = Appointment.objects.filter(patient=patient,
+                                                       status=status_)
+
+        if upcoming_ is not None and upcoming_ == "true":
+            # only return upcoming requests
+            appointments_ = appointments_.filter(start_time__gt=datetime.datetime.now())
+
+        serializer = AppointmentSerializer(appointments_, many=True)
+
         data = {
-            "status": status.HTTP_201_CREATED,
-            "status_description": "CREATED",
+            "status": status.HTTP_200_OK,
+            "status_description": "OK",
             "errors": None,
             "data": serializer.data
         }
         return Response(data, status=status.HTTP_200_OK)
 
     return make_request(request, get_patient_appointments_internal)
+
+
+@api_view(["GET", "DELETE"])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def cancel_patient_upcoming_appointment(request):
+    def get_patient_appointments_internal(req):
+        user: User = request.user
+        patient: Patient = Patient.objects.get(id=user.id)
+        appointments = Appointment.objects.get(patient=patient, id=request.GET["id"], time__gte=datetime.datetime.now())
+        appointments.status = "-1"
+        appointments.save()
+        serializer = AppointmentSerializer(appointments, many=False)
+        data = {
+            "status": status.HTTP_200_OK,
+            "status_description": "OK",
+            "errors": None,
+            "data": serializer.data
+        }
+        return Response(data, status=status.HTTP_200_OK)
+
+    return make_request(request, get_patient_appointments_internal)
+
+
+@api_view(["POST"])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def reschedule_patient_upcoming_appointment(request):
+    def reschedule_patient_appointments_internal(req):
+        user: User = request.user
+        patient: Patient = Patient.objects.get(id=user.id)
+        data = request.data
+
+        appointments = Appointment.objects.get(patient=patient, id=data["appointment_id"],
+                                               start_time__gte=datetime.datetime.now())
+
+        start_time = datetime.datetime.fromisoformat(data["start_time"])
+        end_time = datetime.datetime.fromisoformat(data["end_time"])
+        if end_time.timestamp() < start_time.timestamp():
+            raise Exception("End time cannot be earlier than start time")
+
+        appointments.start_time = start_time
+        appointments.end_time = end_time
+
+        appointments.save()
+        serializer = AppointmentSerializer(appointments, many=False)
+        data = {
+            "status": status.HTTP_200_OK,
+            "status_description": "OK",
+            "errors": None,
+            "data": serializer.data
+        }
+        return Response(data, status=status.HTTP_200_OK)
+
+    return make_request(request, reschedule_patient_appointments_internal)
 
 
 @api_view(["PUT", "POST", "PATCH"])

@@ -1,4 +1,6 @@
 from rest_framework import serializers
+
+from app_physio.serializers import PhysioUserSerializer
 from .models import Patient, PatientLog, PatientFeedback, Appointment, AppointmentCancellation, Penalty, Payment
 
 
@@ -39,6 +41,8 @@ class PatientFeedbackSerializer(serializers.ModelSerializer):
 
 
 class AppointmentSerializer(serializers.ModelSerializer):
+    physiotherapist = PhysioUserSerializer(many=False, read_only=True)
+
     class Meta:
         model = Appointment
         exclude = []

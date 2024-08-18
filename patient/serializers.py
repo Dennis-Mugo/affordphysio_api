@@ -41,7 +41,7 @@ class PatientFeedbackSerializer(serializers.ModelSerializer):
 
 
 class AppointmentSerializer(serializers.ModelSerializer):
-    physiotherapist = PhysioUserSerializer(many=False, read_only=True)
+    physiotherapist = PhysioUserSerializer(many=False, read_only=True,show_created_by=False)
 
     class Meta:
         model = Appointment

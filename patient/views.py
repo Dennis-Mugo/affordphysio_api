@@ -174,6 +174,7 @@ def add_feedback(request):
         }
 
         return Response(data, status=status.HTTP_201_CREATED)
+
     return make_request(request, add_feedback_internal)
 
 
@@ -210,12 +211,15 @@ def make_appointment(request):
             "patient": patient,
             "physiotherapist": physio,
             "start_time": start_time,
+            "physiotherapist_id": physio.id,
             "end_time": end_time,
             "status": 1,
             "appointment_type": data["appointment_type"],
         }
 
         serializer = AppointmentSerializer(data=obj)
+        serializer.physiotherapist = physio
+        serializer.physiotherapist_id = physio.id
         serializer.is_valid(raise_exception=True)
         serializer.save()
         response = {
@@ -227,8 +231,8 @@ def make_appointment(request):
 
         return Response(response, status=status.HTTP_201_CREATED)
 
-    # return make_appointment_internal(request)
-    return make_request(request, make_appointment_internal)
+    return make_appointment_internal(request)
+    # return make_request(request, make_appointment_internal)
 
 
 @api_view(["GET"])

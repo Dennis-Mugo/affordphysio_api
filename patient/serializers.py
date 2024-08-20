@@ -41,11 +41,24 @@ class PatientFeedbackSerializer(serializers.ModelSerializer):
 
 
 class AppointmentSerializer(serializers.ModelSerializer):
-    physiotherapist = PhysioUserSerializer(many=False, read_only=True,show_created_by=False)
+    physiotherapist = PhysioUserSerializer(many=False, read_only=True, show_created_by=False)
 
     class Meta:
         model = Appointment
         exclude = []
+
+    def create(self, validated_data):
+        user = Appointment.objects.create(
+            status=validated_data["status"],
+            appointment_type=validated_data["appointment_type"],
+            patient=validated_data["patient"],
+            physiotherapist_id=self.physiotherapist.id,
+            start_time=validated_data["start_time"],
+            end_time=validated_data["end_time"],
+        )
+
+        user.save()
+        return user
 
 
 class AppointmentCancellationSerializer(serializers.ModelSerializer):

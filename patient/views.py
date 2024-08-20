@@ -204,6 +204,9 @@ def make_appointment(request):
 
         start_time = datetime.datetime.fromisoformat(data["start_time"])
         end_time = datetime.datetime.fromisoformat(data["end_time"])
+        if start_time.timestamp() < datetime.datetime.now().timestamp():
+            # BUG[cae] = this may allow people to set three hours difference
+            raise Exception("Start time must be after current time (can't book an appointment for before)")
         if end_time.timestamp() < start_time.timestamp():
             raise Exception("End time cannot be earlier than start time")
 
@@ -231,8 +234,8 @@ def make_appointment(request):
 
         return Response(response, status=status.HTTP_201_CREATED)
 
-    return make_appointment_internal(request)
-    # return make_request(request, make_appointment_internal)
+    #return make_appointment_internal(request)
+    return make_request(request, make_appointment_internal)
 
 
 @api_view(["GET"])

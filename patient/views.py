@@ -280,7 +280,7 @@ def cancel_patient_upcoming_appointment(request):
     def get_patient_appointments_internal(req):
         user: User = request.user
         patient: Patient = Patient.objects.get(id=user.id)
-        appointments = Appointment.objects.get(patient=patient, id=request.GET["id"], time__gte=datetime.datetime.now())
+        appointments = Appointment.objects.get(patient=patient, id=request.GET["id"], start_time__gte=datetime.datetime.now())
         appointments.status = "-1"
         appointments.save()
         serializer = AppointmentSerializer(appointments, many=False)

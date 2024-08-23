@@ -1,8 +1,10 @@
 import json
+from logging import exception
 from typing import Dict
 
 import django.http
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import render
 from rest_framework import status, permissions
 from rest_framework.authentication import TokenAuthentication
@@ -15,6 +17,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 
+import patient.models
 from api.utils import create_token
 from app_physio.models import PhysioUser
 from app_physio.serializers import PhysioUserSerializer
@@ -131,6 +134,14 @@ def make_request(request: django.http.HttpRequest, function):
                          "errors": e.detail,
                          "data": None}
         return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
+    except ObjectDoesNotExist as e:
+
+        response_data = {"status": status.HTTP_404_NOT_FOUND,
+                         "status_description": "Not found",
+                         "errors": {"exception": [f"{e}"]},
+                         "data": None}
+        return Response(response_data, status=status.HTTP_404_NOT_FOUND)
+
     except Exception as e:
         response_data = {"status": status.HTTP_500_INTERNAL_SERVER_ERROR,
                          "status_description": "Internal server error",

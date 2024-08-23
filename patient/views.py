@@ -82,9 +82,16 @@ def reset_password(request):
 def login(request):
     def login_internal(req):
         user = get_object_or_404(Patient, email=request.data['email'])
-
         if not user.check_password(request.data['password']):
             return Response({"detail": "Email or password is incorrect"}, status=status.HTTP_404_NOT_FOUND)
+        if not user.is_active:
+            response = {
+                "status": status.HTTP_401_UNAUTHORIZED,
+                "status_description": "User account is disabled",
+                "errors": {"exception": ["User account is disabled"]},
+                "data": None
+            }
+            return Response(response, status=status.HTTP_401_UNAUTHORIZED)
         serializer = PatientSerializer(instance=user)
 
         log = add_patient_log("Logged in", user)

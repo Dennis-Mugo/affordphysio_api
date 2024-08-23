@@ -1,4 +1,3 @@
-client_url = "http://localhost:5173"
 import time
 import datetime
 from .serializers import PhysioLogSerializer

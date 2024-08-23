@@ -163,6 +163,7 @@ def add_feedback(request):
             "timestamp": datetime.datetime.now()
         }
         serializer = PatientFeedbackSerializer(data=data_obj)
+        serializer.physiotherapist = get_object_or_404(PhysioUser, id=data["physio_id"])
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
@@ -178,14 +179,25 @@ def add_feedback(request):
     return make_request(request, add_feedback_internal)
 
 
-@api_view(["POST"])
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def get_feedback(request):
-    patient_id = request.data["patientId"]
-    patient = get_object_or_404(Patient, id=patient_id)
-    feedback_list = PatientFeedback.objects.filter(patient=patient)
-    serializer = PatientFeedbackSerializer(feedback_list, many=True)
-    data = get_physio_detail_feedback(serializer.data)
-    return Response(data, status=status.HTTP_200_OK)
+    def get_feedback_internal(req):
+        user: User = request.user
+        patient: Patient = Patient.objects.get(id=user.id)
+        feedback_list = PatientFeedback.objects.filter(patient=patient)
+        serializer = PatientFeedbackSerializer(feedback_list, many=True)
+
+        response = {
+            "status": status.HTTP_200_OK,
+            "status_description": "OK",
+            "errors": None,
+            "data": serializer.data
+        }
+        return Response(response, status=status.HTTP_200_OK)
+
+    return make_request(request, get_feedback_internal)
 
 
 @api_view(["POST"])
@@ -234,7 +246,7 @@ def make_appointment(request):
 
         return Response(response, status=status.HTTP_201_CREATED)
 
-    #return make_appointment_internal(request)
+    # return make_appointment_internal(request)
     return make_request(request, make_appointment_internal)
 
 
@@ -280,7 +292,8 @@ def cancel_patient_upcoming_appointment(request):
     def get_patient_appointments_internal(req):
         user: User = request.user
         patient: Patient = Patient.objects.get(id=user.id)
-        appointments = Appointment.objects.get(patient=patient, id=request.GET["id"], start_time__gte=datetime.datetime.now())
+        appointments = Appointment.objects.get(patient=patient, id=request.GET["id"],
+                                               start_time__gte=datetime.datetime.now())
         appointments.status = "-1"
         appointments.save()
         serializer = AppointmentSerializer(appointments, many=False)

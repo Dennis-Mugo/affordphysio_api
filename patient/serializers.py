@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from rest_framework import serializers
 
 from app_physio.serializers import PhysioUserSerializer
@@ -35,9 +37,23 @@ class PatientLogSerializer(serializers.ModelSerializer):
 
 
 class PatientFeedbackSerializer(serializers.ModelSerializer):
+    physiotherapist = PhysioUserSerializer(read_only=True, many=False, show_created_by=False)
+
     class Meta:
         model = PatientFeedback
         exclude = []
+
+    def create(self, validated_data):
+        feedback = PatientFeedback.objects.create(
+            patient=validated_data["patient"],
+            physiotherapist=self.physiotherapist.id,
+            timestamp=datetime.now(),
+            comments=validated_data["comments"],
+            rating=validated_data["rating"]
+        )
+
+        feedback.save()
+        return feedback
 
 
 class AppointmentSerializer(serializers.ModelSerializer):

@@ -10,3 +10,4 @@ class ClinicsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Clinic
         exclude = []
+

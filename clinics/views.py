@@ -47,7 +47,7 @@ def add_clinic(request: HttpRequest) -> HttpResponse:
 
 @api_view(["GET"])
 def get_clinics(request: HttpRequest) -> HttpResponse:
-    def get_clinic_internal(request: HttpRequest):
+    def get_clinic_internal(req: HttpRequest):
         clinics = Clinic.objects.all().filter(status__in=[1])
         serializer = ClinicsSerializer(clinics, many=True)
         data = {

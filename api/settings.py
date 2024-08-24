@@ -57,7 +57,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     "manager.apps.ManagerConfig",
     "physiotherapist.apps.PhysiotherapistConfig",
-    "corsheaders"
+    "corsheaders",
+    "clinics.apps.ClinicsConfig"
 ]
 
 MIDDLEWARE = [

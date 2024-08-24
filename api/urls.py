@@ -26,5 +26,7 @@ urlpatterns = [
     path('app_physio/', include('app_physio.urls')),
     path('patient/', include('patient.urls')),
     path('managers/', include("manager.urls")),
-    path('physiotherapist/', include("physiotherapist.urls"))
+    path('physiotherapist/', include("physiotherapist.urls")),
+
+    path("clinics/", include("clinics.urls")),
 ]

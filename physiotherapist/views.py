@@ -12,6 +12,8 @@ from api.utils import create_token
 from app_physio.models import PhysioUser, PhysioSchedule
 from app_physio.serializers import PhysioUserSerializer, PhysioScheduleSerializer
 from manager.views import make_request
+from patient.models import PatientFeedback
+from patient.serializers import PatientFeedbackSerializer
 from physiotherapist.app_serializers import PhysioCategoriesSerializer
 from physiotherapist.models import Physiotherapist, PhysiotherapistCategories
 
@@ -60,7 +62,8 @@ def get_single_physio_details(request):
 
         # first get the physio
         physio = get_object_or_404(PhysioUser, id=physio_id)
-        physio_serializer = PhysioUserSerializer(physio, many=False)
+        physio_serializer = PhysioUserSerializer(instance=physio)
+        # physio_serializer.is_valid(raise_exception=True)
 
         # then get schedules
         today = datetime.datetime.today().strftime('%Y-%m-%d')
@@ -68,13 +71,22 @@ def get_single_physio_details(request):
         schedule_list = PhysioSchedule.objects.filter(physio=physio, date__gte=today)
         serializer = PhysioScheduleSerializer(schedule_list, many=True)
 
+        # then get reviews
+        # order them by timestamp
+        reviews = PatientFeedback.objects.filter(physiotherapist=physio).order_by('-timestamp')
+        #reviews = reviews.reverse()
+
+        reviews = reviews[:50]  #limit to the first 50
+        review_serializer = PatientFeedbackSerializer(reviews, show_patient=True, show_physio=False, many=True)
+
         response = {
             "status": status.HTTP_200_OK,
             "status_description": "OK",
             "errors": None,
             "data": {
                 "user": physio_serializer.data,
-                "schedules": serializer.data
+                "schedules": serializer.data,
+                "reviews": review_serializer.data,
             }
         }
         return Response(response, status=status.HTTP_200_OK)

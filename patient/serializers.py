@@ -38,14 +38,22 @@ class PatientLogSerializer(serializers.ModelSerializer):
 
 class PatientFeedbackSerializer(serializers.ModelSerializer):
     physiotherapist = PhysioUserSerializer(read_only=True, many=False, show_created_by=False)
+    patient = PatientSerializer(read_only=True, many=False)
+    show_physio = True
+    show_patient = True
 
     class Meta:
         model = PatientFeedback
         exclude = []
 
+    def __init__(self, instance=None, show_physio=True, show_patient=True, **kwargs):
+        super().__init__(instance=instance, **kwargs)
+        self.show_patient = show_patient
+        self.show_physio = show_physio
+
     def create(self, validated_data):
         feedback = PatientFeedback.objects.create(
-            patient=validated_data["patient"],
+            patient=self.patient.id,
             physiotherapist=self.physiotherapist.id,
             timestamp=datetime.now(),
             comments=validated_data["comments"],
@@ -54,6 +62,14 @@ class PatientFeedbackSerializer(serializers.ModelSerializer):
 
         feedback.save()
         return feedback
+
+    def to_representation(self, instance):
+        response = super().to_representation(instance)
+        if not self.show_patient:
+            response.pop("patient")
+        if not self.show_physio:
+            response.pop("physiotherapist")
+        return response
 
 
 class AppointmentSerializer(serializers.ModelSerializer):

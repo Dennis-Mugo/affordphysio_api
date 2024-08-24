@@ -19,13 +19,13 @@ class PhysioUserSerializer(serializers.ModelSerializer):
         write_only_fields = ("password",)
         read_only_fields = ("id", "created_date", "modified_date",)
 
-    def __init__(self, show_created_by: bool = True, **kwargs):
+    def __init__(self, instance=None, show_created_by: bool = True, **kwargs):
         """
         Initialize serializer with arguments
 
         param: show_created_by: Influences if we are going to show `created_by` field
         """
-        super().__init__(**kwargs)
+        super().__init__(instance=instance, **kwargs)
         self.show_created_by = show_created_by
 
     def create(self, validated_data):

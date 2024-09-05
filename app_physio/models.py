@@ -22,6 +22,8 @@ class PhysioUser(User):
 
     created_date = models.DateTimeField(auto_now_add=True)
     modified_date = models.DateTimeField(auto_now=True)
+    image = models.ImageField(null=True,upload_to="assets/patient_images/")
+
 
     def __str__(self):
         return str(self.id) + " " + self.first_name

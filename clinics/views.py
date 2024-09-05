@@ -1,5 +1,7 @@
+import asyncio
+
 import django
-from django.db.models import Q
+from django.db.models import Q, Avg, Count
 from django.http import HttpResponse, QueryDict
 from django.shortcuts import render
 from django.http.request import HttpRequest
@@ -58,7 +60,8 @@ def get_clinics(request: HttpRequest) -> HttpResponse:
             clinics = Clinic.objects.all().filter(status__in=[1])
         else:
             clinics = Clinic.objects.filter(Q(name__contains=filter_) |
-                                            Q(location_description__contains=filter_))
+                                            Q(location_description__contains=filter_)
+                                            ).filter(status__in=[1])
 
         serializer = ClinicsSerializer(clinics, many=True)
         data = {
@@ -111,6 +114,12 @@ def get_clinic_details(request: HttpRequest) -> HttpResponse:
 
         physiotherapists = PhysioUserSerializer(physios, show_created_by=False, many=True)
 
+        # limit reviews to 10
+        clinic_reviews = ClinicReviews.objects.filter(clinic_id=clinic.id)
+        rating = clinic_reviews.aggregate(average=Avg("rating"), count=Count("rating"))
+        clinic_reviews = clinic_reviews[:10]
+
+        clinics_reviews_serializer = ClinicReviewsSerializer(clinic_reviews, many=True)
         response = {
             "status": status.HTTP_200_OK,
             "status_description": "OK",
@@ -119,7 +128,11 @@ def get_clinic_details(request: HttpRequest) -> HttpResponse:
                 "clinic": clinic_serializer.data,
                 "physiotherapists": physiotherapists.data,
                 "images": image_serializers.data,
-
+                "reviews": clinics_reviews_serializer.data,
+                "rating": {
+                    "avg": rating["average"],
+                    "count": rating["count"]
+                }
             }
         }
         return Response(data=response, status=status.HTTP_200_OK)
@@ -190,5 +203,5 @@ def add_clinic_review(request: HttpRequest) -> HttpResponse:
         }
         return Response(status=status.HTTP_201_CREATED, data=serialized_data)
 
-    #return add_clinic_review_internal(request)
+    # return add_clinic_review_internal(request)
     return make_request(request, add_clinic_review_internal)

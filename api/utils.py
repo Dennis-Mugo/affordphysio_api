@@ -15,6 +15,7 @@ def create_token(serializer: Serializer):
                               'email': serializer.data["email"],
                               'first_name': serializer.data["first_name"],
                               'last_name': serializer.data["last_name"],
+                              'image': serializer.data["image"],
                               }}
 
     return Response(response_data,

@@ -5,7 +5,7 @@ from django.db import models
 
 from app_physio.models import PhysioUser
 from manager.models import Manager
-from patient.models import Appointment
+from patient.models import Appointment, Patient
 
 
 # Create your models here.
@@ -37,7 +37,7 @@ class ClinicImages(models.Model):
 
 
 class ClinicReviews(models.Model):
-    user = models.ForeignKey(PhysioUser, on_delete=models.CASCADE)
+    user = models.ForeignKey(Patient, on_delete=models.CASCADE)
     clinic = models.ForeignKey(Clinic, on_delete=models.CASCADE)
     rating = models.IntegerField(null=False)
     comment = models.TextField(null=False)

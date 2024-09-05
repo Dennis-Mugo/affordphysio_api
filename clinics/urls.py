@@ -9,7 +9,8 @@ urlpatterns = [
 
     path("v1/get_clinic_details", views.get_clinic_details),
 
-    path("v1/add_clinic_images",views.add_clinic_images),
-
+    path("v1/add_clinic_images", views.add_clinic_images),
+    path("v1/add_clinic_review", views.add_clinic_review),
+    path("v1/get_clinic_reviews", views.get_clinic_reviews),
 
 ]

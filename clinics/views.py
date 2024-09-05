@@ -11,10 +11,12 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from app_physio.serializers import PhysioUserSerializer
-from clinics.app_serializers import ClinicsSerializer, PhysioClinicsSerializer, ClinicImageSerializer
-from clinics.models import Clinic, PhysioClinic, ClinicImages
+from clinics.app_serializers import ClinicsSerializer, PhysioClinicsSerializer, ClinicImageSerializer, \
+    ClinicReviewsSerializer
+from clinics.models import Clinic, PhysioClinic, ClinicImages, ClinicReviews
 from manager.models import Manager
 from manager.views import make_request
+from patient.models import Patient
 from physiotherapist.models import Physiotherapist
 
 
@@ -100,7 +102,8 @@ def get_clinic_details(request: HttpRequest) -> HttpResponse:
     def get_clinic_internal(req: HttpRequest):
         clinic = Clinic.objects.get(id=req.GET["clinic_id"])
         clinic_serializer = ClinicsSerializer(clinic)
-        physios = [e.physiotherapist for e in PhysioClinic.objects.select_related("physiotherapist").filter(clinic_id=clinic.id)]
+        physios = [e.physiotherapist for e in
+                   PhysioClinic.objects.select_related("physiotherapist").filter(clinic_id=clinic.id)]
 
         images = ClinicImages.objects.filter(clinic_id=clinic.id)
 
@@ -147,3 +150,45 @@ def add_clinic_images(request: HttpRequest) -> HttpResponse:
         return Response(data=serialized_data, status=status.HTTP_201_CREATED)
 
     return make_request(request, add_clinic_image_internal)
+
+
+@api_view(["GET"])
+def get_clinic_reviews(request: HttpRequest) -> HttpResponse:
+    def get_clinic_reviews_internal(request: HttpRequest):
+        clinic = Clinic.objects.get(id=request.GET["clinic_id"])
+        clinic_reviews = ClinicReviews.objects.filter(clinic=clinic)
+        clinic_reviews_serializer = ClinicReviewsSerializer(clinic_reviews, many=True)
+        serialized_data = {
+            "status": status.HTTP_200_OK,
+            "status_description": "OK",
+            "errors": None,
+            "data": clinic_reviews_serializer.data
+        }
+        return Response(data=serialized_data, status=status.HTTP_200_OK)
+
+    return make_request(request, get_clinic_reviews_internal)
+
+
+@api_view(["POST"])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def add_clinic_review(request: HttpRequest) -> HttpResponse:
+    def add_clinic_review_internal(request: HttpRequest):
+        user: User = request.user
+
+        patient: Patient = Patient.objects.get(id=user.id)
+        data: QueryDict = request.data
+        serializer = ClinicReviewsSerializer(data=data)
+        serializer.user = patient
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        serialized_data = {
+            "status": status.HTTP_200_OK,
+            "status_description": "OK",
+            "errors": None,
+            "data": serializer.data
+        }
+        return Response(status=status.HTTP_201_CREATED, data=serialized_data)
+
+    #return add_clinic_review_internal(request)
+    return make_request(request, add_clinic_review_internal)

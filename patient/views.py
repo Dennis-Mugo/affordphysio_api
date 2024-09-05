@@ -83,7 +83,13 @@ def login(request):
     def login_internal(req):
         user = get_object_or_404(Patient, email=request.data['email'])
         if not user.check_password(request.data['password']):
-            return Response({"detail": "Email or password is incorrect"}, status=status.HTTP_404_NOT_FOUND)
+            response = {
+                "status": status.HTTP_401_UNAUTHORIZED,
+                "status_description": "User account is disabled",
+                "errors": {"exception": ["Email or password is incorrect"]},
+                "data": None
+            }
+            return Response(response, status=status.HTTP_401_UNAUTHORIZED)
         if not user.is_active:
             response = {
                 "status": status.HTTP_401_UNAUTHORIZED,
@@ -499,3 +505,24 @@ def get_payments(request):
     payments = Payment.objects.filter(patient=patient_id)
     serializer = PaymentSerializer(payments, many=True)
     return Response(serializer.data, status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def upload_profile(request):
+    def upload_profile_internal(request):
+        user: User = request.user
+        patient: Patient = Patient.objects.get(id=user.id)
+        serializer = PatientSerializer(patient, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        data = {
+            "status": status.HTTP_200_OK,
+            "status_description": "OK",
+            "errors": None,
+            "data": serializer.data
+        }
+        return Response(data, status=status.HTTP_200_OK)
+
+    return make_request(request, upload_profile_internal)

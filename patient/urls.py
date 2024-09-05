@@ -30,4 +30,5 @@ urlpatterns = [
     path("add_payment", views.add_payment),
     path("get_payments", views.get_payments),
 
+    path("v1/update_profile", views.upload_profile)
 ]

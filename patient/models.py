@@ -23,6 +23,7 @@ class Patient(User):
     occupation = models.CharField(max_length=50, null=True)
     chronic_disease_history = models.TextField(null=True)
     hobby = models.CharField(max_length=50, null=True)
+    image = models.ImageField(null=True,upload_to="assets/patient_images/")
 
     def __str__(self):
         return str(self.id) + " " + self.email
@@ -69,6 +70,7 @@ class Appointment(models.Model):
     appointment_type = models.CharField(null=False, max_length=50)
     created_date = models.DateTimeField(auto_now_add=True)
     modified_date = models.DateTimeField(auto_now=True)
+    amount = models.IntegerField(null=False, default=0)
 
     def __str__(self):
         return self.patient.first_name + " " + self.status
@@ -91,5 +93,6 @@ class AppointmentCancellation(models.Model):
 class Payment(models.Model):
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
     code = models.CharField(max_length=50, null=True)
+    appointment = models.ForeignKey(Appointment, on_delete=models.CASCADE)
     status = models.CharField(max_length=50, null=True)
     timestamp = models.DateTimeField(auto_now_add=True)

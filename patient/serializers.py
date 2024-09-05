@@ -9,7 +9,7 @@ from .models import Patient, PatientLog, PatientFeedback, Appointment, Appointme
 class PatientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Patient
-        fields = ("id", "username", "email", "password", "first_name", "last_name")
+        fields = ("id", "username", "email", "password", "first_name", "last_name", "image")
         write_only_fields = ("password",)
         read_only_fields = ("id",)
 

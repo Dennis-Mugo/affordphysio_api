@@ -13,4 +13,6 @@ urlpatterns = [
     path("v1/add_clinic_review", views.add_clinic_review),
     path("v1/get_clinic_reviews", views.get_clinic_reviews),
 
+    path("v1/update_clinic_review",views.update_clinic_review)
+
 ]

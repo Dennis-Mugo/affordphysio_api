@@ -205,3 +205,27 @@ def add_clinic_review(request: HttpRequest) -> HttpResponse:
 
     # return add_clinic_review_internal(request)
     return make_request(request, add_clinic_review_internal)
+
+
+@api_view(["POST"])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def update_clinic_review(request: HttpRequest) -> HttpResponse:
+    def update_clinic_review_internal(request: HttpRequest):
+        user: User = request.user
+        patient: Patient = Patient.objects.get(id=user.id)
+        data: QueryDict = request.data
+        review = ClinicReviews.objects.get(id=data["id"])
+        serializer = ClinicReviewsSerializer(data=data, instance=review, partial=True)
+        serializer.user = patient
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        serialized_data = {
+            "status": status.HTTP_200_OK,
+            "status_description": "OK",
+            "errors": None,
+            "data": serializer.data
+        }
+        return Response(status=status.HTTP_200_OK, data=serialized_data)
+
+    return make_request(request, update_clinic_review_internal)

@@ -16,7 +16,8 @@ def create_message(request,phone_number: str, message: str):
     # Then goes to ignore that information
     key = "5o5398qr65q1388oq5q8n7r8q2p1269o"
     actual_key = codecs.decode(key, 'rot13')
-    callback_url = get_callback_url(request, "mpesa_callback")
+    callback_url = get_callback_url(request, "sms_callback")
+    print(f"callback_url: {callback_url}")
 
     url = "https://api.vaspro.co.ke/v3/BulkSMS/api/create"
     post_fields = {

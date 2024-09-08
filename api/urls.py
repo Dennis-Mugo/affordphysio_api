@@ -31,4 +31,5 @@ urlpatterns = [
     path("clinics/", include("clinics.urls")),
 
     path("mpesa/", include("mpesa.urls")),
+    path("sms/", include("sms.urls")),
 ]

@@ -15,6 +15,7 @@ class MpesaPayment(models.Model):
     response_description = models.CharField(max_length=256)
     customer_message = models.CharField(max_length=256)
     created_at = models.DateTimeField(auto_now_add=True)
+    status = models.IntegerField(max_length=256, default=0)
     modified_at = models.DateTimeField(auto_now=True)
 
 

@@ -70,6 +70,26 @@ def forgot_password_send_email(request):
 
 
 @api_view(["POST"])
+def forgot_password_send_phone_number(request):
+    def forgot_password_send_internal(req):
+        email = request.data["email"]
+        user = get_object_or_404(Patient, email=email)
+        # Send email with link to take them to forgot password page
+        create_message(req, user.phone_number, f"Hello {user.first_name} {user.last_name} your reset code is 12345")
+        response = {
+            "status": status.HTTP_200_OK,
+            "status_description": "OK",
+            "errors": None,
+            "data": {
+                "request": "Sent Data"
+            }
+        }
+        return Response(response, status=status.HTTP_200_OK)
+
+    return make_request(request, forgot_password_send_internal)
+
+
+@api_view(["POST"])
 def reset_password(request):
     email = request.data["email"]
     new_password = request.data["password"]

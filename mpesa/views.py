@@ -45,7 +45,7 @@ def deposit_mpesa(request):
             return format_error("amount is required", status.HTTP_400_BAD_REQUEST)
 
         callback_url = get_callback_url(request, "mpesa_callback")
-        #callback_url = "https://webhook.site/0f3983be-6d44-4cce-aab0-020281f6d504"
+        # callback_url = "https://webhook.site/0f3983be-6d44-4cce-aab0-020281f6d504"
         response = send_stk_push(
             phone_number=phone_number, amount=int(amount), callback_url=callback_url
         )
@@ -62,6 +62,7 @@ def deposit_mpesa(request):
                 response_code=res["ResponseCode"],
                 response_description=res["ResponseDescription"],
                 customer_message=res["CustomerMessage"],
+                status=0,
             )
             re.save()
             serializer = MpesaPaymentSerializer(instance=re)
@@ -72,7 +73,7 @@ def deposit_mpesa(request):
                 "errors": None,
                 "data": serializer.data,
             }
-            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+            return Response(response, status=status.HTTP_200_OK)
 
         if response.status_code == 400 or response.status_code == 500:
             json = response.json()
@@ -91,7 +92,6 @@ def deposit_mpesa(request):
             }
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
         return Response(response.json(), status=response.status_code)
-
 
     return make_request(request, deposit_mpesa_inner)
 

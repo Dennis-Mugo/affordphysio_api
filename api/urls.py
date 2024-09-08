@@ -29,4 +29,6 @@ urlpatterns = [
     path('physiotherapist/', include("physiotherapist.urls")),
 
     path("clinics/", include("clinics.urls")),
+
+    path("mpesa/", include("mpesa.urls")),
 ]

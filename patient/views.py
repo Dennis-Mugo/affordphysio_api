@@ -4,6 +4,7 @@ from rest_framework.serializers import Serializer
 
 from api.utils import create_token
 from manager.views import make_request
+from sms.views import create_message
 from .models import Patient, PatientFeedback, Appointment, Payment
 from app_admin.models import EmailToken, EducationResource, ServiceProvided
 from app_physio.models import PhysioUser, PhysioSchedule

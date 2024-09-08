@@ -16,7 +16,7 @@ class Patient(User):
     gender = models.CharField(max_length=50, null=True)
     weight = models.IntegerField(null=True)
     height = models.IntegerField(null=True)
-    phone_number = models.CharField(max_length=15, null=True)
+    phone_number = models.CharField(max_length=15, null=False)
     marital_status = models.CharField(max_length=30, null=True)
     religion = models.CharField(max_length=50, null=True)
     education = models.TextField(null=True)

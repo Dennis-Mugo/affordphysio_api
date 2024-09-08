@@ -57,7 +57,8 @@ INSTALLED_APPS = [
     "manager.apps.ManagerConfig",
     "physiotherapist.apps.PhysiotherapistConfig",
     "corsheaders",
-    "clinics.apps.ClinicsConfig"
+    "clinics.apps.ClinicsConfig",
+    "sms.apps.SmsConfig"
 ]
 
 MIDDLEWARE = [

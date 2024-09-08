@@ -1,3 +1,5 @@
+from typing import Any
+
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
@@ -20,3 +22,11 @@ def create_token(serializer: Serializer):
 
     return Response(response_data,
                     status=status.HTTP_201_CREATED)
+
+
+def format_successful_operation(data: Any):
+    response_data = {"status": status.HTTP_200_OK,
+                     "status_description": "OK",
+                     "errors": None,
+                     "data": data}
+    return Response(response_data, status=status.HTTP_200_OK)

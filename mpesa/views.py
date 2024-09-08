@@ -5,6 +5,7 @@ from rest_framework.decorators import permission_classes, api_view, authenticati
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from api.utils import format_successful_operation
 from manager.views import make_request
 from mpesa.app_serializers import MpesaDepositErrorsSerializer, MpesaPaymentSerializer
 from mpesa.models import MpesaPayment, Wallet, MpesaWithdrawal, MpesaDepositErrors, Deposit
@@ -125,6 +126,7 @@ def mpesa_callback(request):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
 def verify_mpesa_payment(request):
     data = request.data
     checkout_id = data.get("checkout_id")
@@ -221,3 +223,19 @@ def queue_callback(request):
         # TODO: Send withdraw email
 
     return Response({})
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+def get_mpesa_transactions(request):
+    def get_mpesa_transactions_inner(request):
+        user = request.user
+        patient = Patient.objects.get(id=user.id)
+
+        details = MpesaPayment.objects.filter(user=patient)
+        serializer = MpesaPaymentSerializer(details, many=True)
+
+        return format_successful_operation(serializer.data)
+    # return get_mpesa_transactions_inner(request)
+    return make_request(request, get_mpesa_transactions_inner)

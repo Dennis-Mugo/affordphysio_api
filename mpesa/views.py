@@ -1,3 +1,6 @@
+import logging
+from gc import callbacks
+
 from django.shortcuts import render, resolve_url, get_object_or_404
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
@@ -8,7 +11,7 @@ from rest_framework.response import Response
 from api.utils import format_successful_operation
 from manager.views import make_request
 from mpesa.app_serializers import MpesaDepositErrorsSerializer, MpesaPaymentSerializer
-from mpesa.models import MpesaPayment, Wallet, MpesaWithdrawal, MpesaDepositErrors, Deposit
+from mpesa.models import MpesaPayment, Wallet, MpesaWithdrawal, MpesaDepositErrors, Deposit, MpesaCallBackResponse
 from mpesa.utils import send_stk_push, verify_payment, mpesa_withdrawal, MpesaStatus
 from patient.models import Patient
 
@@ -99,29 +102,47 @@ def deposit_mpesa(request):
 
 @api_view(["POST"])
 def mpesa_callback(request):
-    data = request.data["Body"]["stkCallback"]
-    result_code = data["ResultCode"]
-    if result_code != 0:
-        pass
-    else:
-        checkout_id = data["CheckoutRequestID"]
-        metadata = data["CallbackMetadata"]["Item"]
+    def mpesa_callback_inner(request):
+        data = request.data["Body"]["stkCallback"]
+        logging.error(data)
+        result_code = 0
+        if isinstance(data["ResultCode"], str):
+            result_code = int(data["ResultCode"])
+        if isinstance(data["ResultCode"], int):
+            result_code = data["ResultCode"]
 
-        receipt_number = metadata[1]["Value"]
-        amount = metadata[0]["Value"]
+        result_description = data["ResultDescription"]
+        # record the fields
+        merchant_request = data["MerchantRequestID"]
+        checkout_request = data["CheckoutRequestID"]
+        ## Get payment
+        mpesa_payment = MpesaPayment.objects.get(merchant_id=merchant_request, checkout_id=checkout_request)
 
-        mpesa_payment = MpesaPayment.objects.get(checkout_id=checkout_id)
-        mpesa_payment.reference_number = receipt_number
-        mpesa_payment.save()
-        mpesa_payment.completed = True
-        Deposit.objects.create(
-            user=mpesa_payment.user,
-            amount=mpesa_payment.amount,
-            reference_number=mpesa_payment.checkout_id,
-            method="mpesa",
-        )
+        if result_code != 0:
+            callback = MpesaCallBackResponse.objects.create(payment=mpesa_payment, result_code=result_code,
+                                                            result_description=result_description, status=result_code)
+            callback.save()
 
-    return Response(data={}, status=status.HTTP_200_OK)
+        else:
+            # successful request
+            metadata = data["CallbackMetadata"]["Item"]
+            # Recipient Number
+            receipt_number = metadata[1]["Value"]
+
+            mpesa_payment.save()
+            callback = MpesaCallBackResponse.objects.get(
+                payment=mpesa_payment,
+                result_code=result_code,
+                result_description=result_description,
+                status=result_code,
+                mpesa_receipt_number=receipt_number,
+
+            )
+            callback.save()
+
+        return Response(data={}, status=status.HTTP_200_OK)
+
+    return make_request(request, mpesa_callback_inner)
 
 
 @api_view(["POST"])
@@ -220,8 +241,6 @@ def queue_callback(request):
             amount=int(amount),
             reference_number=mpesa_withdrawal.reference_number,
         )
-        # TODO: Send withdraw email
-
     return Response({})
 
 
@@ -233,9 +252,10 @@ def get_mpesa_transactions(request):
         user = request.user
         patient = Patient.objects.get(id=user.id)
 
-        details = MpesaPayment.objects.filter(user=patient)
+        details = MpesaPayment.objects.filter(user=patient).order_by('-created_at')
         serializer = MpesaPaymentSerializer(details, many=True)
 
         return format_successful_operation(serializer.data)
+
     # return get_mpesa_transactions_inner(request)
     return make_request(request, get_mpesa_transactions_inner)

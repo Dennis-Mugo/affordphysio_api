@@ -111,7 +111,7 @@ def mpesa_callback(request):
         if isinstance(data["ResultCode"], int):
             result_code = data["ResultCode"]
 
-        result_description = data["ResultDescription"]
+        result_description = data["ResultDesc"]
         # record the fields
         merchant_request = data["MerchantRequestID"]
         checkout_request = data["CheckoutRequestID"]

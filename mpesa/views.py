@@ -21,7 +21,7 @@ def format_error(errors, status_code=status.HTTP_400_BAD_REQUEST):
         "status": status_code,
         "errors": {"exception": [errors]},
         "data": None,
-        "status_description": "Error Occurred "
+        "status_description": "Error occurred "
     }, headers={}, status=status_code)
 
 

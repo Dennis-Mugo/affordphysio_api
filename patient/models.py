@@ -24,6 +24,7 @@ class Patient(User):
     chronic_disease_history = models.TextField(null=True)
     hobby = models.CharField(max_length=50, null=True)
     image = models.ImageField(null=True,upload_to="assets/patient_images/")
+    reset_code = models.CharField(max_length=10, null=True)
 
     def __str__(self):
         return str(self.id) + " " + self.email

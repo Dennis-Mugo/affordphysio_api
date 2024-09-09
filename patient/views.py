@@ -1,9 +1,12 @@
+import random
 from django.db.models import Q
 from django.http import JsonResponse
 from rest_framework.serializers import Serializer
 
+import patient
 from api.utils import create_token
 from manager.views import make_request
+from mpesa.views import format_error
 from sms.views import create_message
 from .models import Patient, PatientFeedback, Appointment, Payment
 from app_admin.models import EmailToken, EducationResource, ServiceProvided
@@ -73,9 +76,15 @@ def forgot_password_send_email(request):
 def forgot_password_send_phone_number(request):
     def forgot_password_send_internal(req):
         email = request.data["email"]
-        user = get_object_or_404(Patient, email=email)
+        user: Patient = get_object_or_404(Patient, email=email)
+
+        key = random.randrange(100000, 999999)
+
         # Send email with link to take them to forgot password page
-        create_message(req, user.phone_number, f"Hello {user.first_name} {user.last_name} your reset code is 12345")
+        user.reset_code = key
+        user.save()
+
+        create_message(req, user.phone_number, f"Hello {user.first_name} {user.last_name} your reset code is {key}")
         response = {
             "status": status.HTTP_200_OK,
             "status_description": "OK",
@@ -97,6 +106,30 @@ def reset_password(request):
     user.set_password(new_password)
     user.save()
     return Response({"success": True}, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+def reset_password_sms(request):
+    def reset_password_internal(req):
+        email = request.data["email"]
+        new_password = request.data["password"]
+        code = request.data["code"]
+        user = get_object_or_404(Patient, email=email)
+        if user.reset_code != code:
+            return format_error("Please Enter valid reset code", status_code=status.HTTP_401_UNAUTHORIZED)
+        ## otherwise everything is good
+        user.set_password(new_password)
+        user.reset_code = ""
+        user.save()
+        response = {
+            "status": status.HTTP_200_OK,
+            "status_description": "Successfully reset password, please login with the new password",
+            "errors": None,
+            "data": None,
+        }
+        return Response(response, status=status.HTTP_200_OK)
+
+    return make_request(request, reset_password_internal)
 
 
 @api_view(["POST"])

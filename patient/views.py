@@ -87,11 +87,9 @@ def forgot_password_send_phone_number(request):
         create_message(req, user.phone_number, f"Hello {user.first_name} {user.last_name} your reset code is {key}")
         response = {
             "status": status.HTTP_200_OK,
-            "status_description": "OK",
+            "status_description": f"Successfully sent a reset code with number ending in {user.reset_code[-2:]}",
             "errors": None,
-            "data": {
-                "request": "Sent Data"
-            }
+            "data": None,
         }
         return Response(response, status=status.HTTP_200_OK)
 

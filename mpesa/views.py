@@ -19,7 +19,7 @@ from patient.models import Patient
 def format_error(errors, status_code=status.HTTP_400_BAD_REQUEST):
     return Response({
         "status": status_code,
-        "errors": [{"exception": [errors]}],
+        "errors": {"exception": [errors]},
         "data": None,
         "status_description": "Error Occurred "
     }, headers={}, status=status_code)

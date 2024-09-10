@@ -132,7 +132,7 @@ def mpesa_callback(request):
             mpesa_payment.status = 1
 
             mpesa_payment.save()
-            callback = MpesaCallBackResponse.objects.get(
+            callback = MpesaCallBackResponse.objects.create(
                 payment=mpesa_payment,
                 result_code=result_code,
                 result_description=result_description,

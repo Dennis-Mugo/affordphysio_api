@@ -56,7 +56,7 @@ class MpesaCallBackResponse(models.Model):
     payment = models.ForeignKey(MpesaPayment, on_delete=models.CASCADE)
     result_code = models.CharField(max_length=256)
     result_description = models.CharField(max_length=256)
-    mpesa_recipient_number = models.CharField(max_length=256, null=True, blank=True),
+    mpesa_receipt_number = models.CharField(max_length=256, null=True, blank=True)
     status = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)

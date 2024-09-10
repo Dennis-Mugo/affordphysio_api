@@ -120,7 +120,8 @@ def mpesa_callback(request):
 
         if result_code != 0:
             callback = MpesaCallBackResponse.objects.create(payment=mpesa_payment, result_code=result_code,
-                                                            result_description=result_description, status=result_code)
+                                                            result_description=result_description, status=result_code,
+                                                            amount=0, mpesa_receipt_number="NULL")
             callback.save()
 
         else:

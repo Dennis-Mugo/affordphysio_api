@@ -128,6 +128,10 @@ def mpesa_callback(request):
             metadata = data["CallbackMetadata"]["Item"]
             # Recipient Number
             receipt_number = metadata[1]["Value"]
+            # amount
+            amount = metadata[0]["Value"]
+            # transaction date
+            transaction_date = metadata[3]["Value"]
 
             mpesa_payment.status = 1
 
@@ -136,6 +140,8 @@ def mpesa_callback(request):
                 payment=mpesa_payment,
                 result_code=result_code,
                 result_description=result_description,
+                transaction_date=transaction_date,
+                amount=float(amount),
                 status=result_code,
                 mpesa_receipt_number=receipt_number,
 

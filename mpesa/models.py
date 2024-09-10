@@ -55,6 +55,8 @@ class MpesaDepositErrors(models.Model):
 class MpesaCallBackResponse(models.Model):
     payment = models.ForeignKey(MpesaPayment, on_delete=models.CASCADE)
     result_code = models.CharField(max_length=256)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    transaction_date = models.CharField(max_length=256)
     result_description = models.CharField(max_length=256)
     mpesa_receipt_number = models.CharField(max_length=256, null=True, blank=True)
     status = models.IntegerField(default=0)

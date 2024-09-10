@@ -18,6 +18,7 @@ def create_token(serializer: Serializer):
                               'first_name': serializer.data["first_name"],
                               'last_name': serializer.data["last_name"],
                               'image': serializer.data["image"],
+                              "phone_number": serializer.data["phone_number"],
                               }}
 
     return Response(response_data,

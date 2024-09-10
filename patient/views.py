@@ -539,15 +539,16 @@ def get_services(request):
 
 @api_view(["POST"])
 def add_payment(request):
-    data = request.data
-    data["timestamp"] = datetime.datetime.fromtimestamp(data["timestamp"])
-    data["patient"] = data["patientId"]
-    serializer = PaymentSerializer(data=data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+    def add_payment_inner(request):
+        data = request.data
+        data["timestamp"] = datetime.datetime.fromtimestamp(data["timestamp"])
+        data["patient"] = data["patientId"]
+        serializer = PaymentSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    return make_request(request, add_payment_inner)
 
 @api_view(["POST"])
 def get_payments(request):

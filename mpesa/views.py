@@ -103,7 +103,7 @@ def deposit_mpesa(request):
 @api_view(["POST"])
 def mpesa_callback(request):
     def mpesa_callback_inner(request):
-        data = request.data["Body"]["stkCallback"]
+        data = request.data
         logging.error(data)
         result_code = 0
         if isinstance(data["ResultCode"], str):
@@ -128,6 +128,8 @@ def mpesa_callback(request):
             metadata = data["CallbackMetadata"]["Item"]
             # Recipient Number
             receipt_number = metadata[1]["Value"]
+
+            mpesa_payment.status = 1
 
             mpesa_payment.save()
             callback = MpesaCallBackResponse.objects.get(

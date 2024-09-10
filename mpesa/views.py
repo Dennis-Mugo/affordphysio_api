@@ -103,7 +103,7 @@ def deposit_mpesa(request):
 @api_view(["POST"])
 def mpesa_callback(request):
     def mpesa_callback_inner(request):
-        data = request.data["Body"]
+        data = request.data["Body"]["stkCallback"]
         logging.error(data)
         result_code = 0
         if isinstance(data["ResultCode"], str):

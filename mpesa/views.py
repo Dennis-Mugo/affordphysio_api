@@ -148,6 +148,7 @@ def mpesa_callback(request):
 
             )
             callback.save()
+            ## callback is okay,
 
         return Response(data={}, status=status.HTTP_200_OK)
 

@@ -15,7 +15,7 @@ class PhysioUserSerializer(serializers.ModelSerializer):
         model = PhysioUser
         fields = ("id", "username", "email", "password", "first_name", "last_name", "created_date", "modified_date",
                   "created_by", "is_active", "last_login", "specialty", "pck_number", "phone_number", "gender",
-                  "education", "years_of_experience", "description", "category")
+                  "education", "years_of_experience", "description", "category","image")
         write_only_fields = ("password",)
         read_only_fields = ("id", "created_date", "modified_date",)
 

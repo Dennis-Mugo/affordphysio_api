@@ -153,7 +153,13 @@ def mpesa_callback(request):
 
             )
             callback.save()
-            ## callback is okay,
+            ## callback is okay
+
+            ## add to wallet
+            wallet, v = Wallet.objects.get_or_create(user=mpesa_payment.user)
+            wallet.amount += float(amount)
+
+            wallet.save()
 
         return Response(data={}, status=status.HTTP_200_OK)
 

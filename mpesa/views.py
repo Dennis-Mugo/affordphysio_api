@@ -1,5 +1,6 @@
 import logging
 from gc import callbacks
+from typing import List, Dict, Any
 
 from django.shortcuts import render, resolve_url, get_object_or_404
 from rest_framework import status
@@ -10,7 +11,7 @@ from rest_framework.response import Response
 
 from api.utils import format_successful_operation
 from manager.views import make_request
-from mpesa.app_serializers import MpesaDepositErrorsSerializer, MpesaPaymentSerializer
+from mpesa.app_serializers import MpesaDepositErrorsSerializer, MpesaPaymentSerializer, MpesaCallbackSerializer
 from mpesa.models import MpesaPayment, Wallet, MpesaWithdrawal, MpesaDepositErrors, Deposit, MpesaCallBackResponse
 from mpesa.utils import send_stk_push, verify_payment, mpesa_withdrawal, MpesaStatus
 from patient.models import Patient
@@ -122,6 +123,10 @@ def mpesa_callback(request):
             callback = MpesaCallBackResponse.objects.create(payment=mpesa_payment, result_code=result_code,
                                                             result_description=result_description, status=result_code,
                                                             amount=0, mpesa_receipt_number="NULL")
+            # -1 indicates an error
+            mpesa_payment.status = -1
+            mpesa_payment.save()
+
             callback.save()
 
         else:
@@ -264,8 +269,20 @@ def get_mpesa_transactions(request):
 
         details = MpesaPayment.objects.filter(user=patient).order_by('-created_at')
         serializer = MpesaPaymentSerializer(details, many=True)
+        ce = list(details)
 
-        return format_successful_operation(serializer.data)
+        data: List[Dict[str, Any]] = serializer.data
+        # we know data format is a list of transactions
+        for i, datum in enumerate(data):
+            detail = ce[i]
+            # get the transaction if it exists
+            try:
+                transaction_ref = MpesaCallBackResponse.objects.get(payment=detail)
+                datum["response"] = MpesaCallbackSerializer(transaction_ref).data
+            except Exception as e:
+                pass
+
+        return format_successful_operation(data)
 
     # return get_mpesa_transactions_inner(request)
     return make_request(request, get_mpesa_transactions_inner)

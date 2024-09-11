@@ -4,6 +4,13 @@
 
 The telehealth management system bridges the gap between physiotherapists and patients. It allows the patients to book appointments, view services provided and engage in a self-screening process.
 
+## Useful Commands
+
+Log into the database
+
+```shell
+psql -U amref -p 5434 -d afford_physio
+```
 # Project Setup/Installation Instructions:
 ## Dependencies:
 * Python

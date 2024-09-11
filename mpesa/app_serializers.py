@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from mpesa.models import MpesaDepositErrors, MpesaPayment
+from mpesa.models import MpesaDepositErrors, MpesaPayment, MpesaCallBackResponse
 
 
 class MpesaDepositErrorsSerializer(serializers.ModelSerializer):
@@ -10,4 +10,9 @@ class MpesaDepositErrorsSerializer(serializers.ModelSerializer):
 class MpesaPaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = MpesaPayment
+        exclude = []
+
+class MpesaCallbackSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MpesaCallBackResponse
         exclude = []

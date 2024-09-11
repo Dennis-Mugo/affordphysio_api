@@ -11,7 +11,8 @@ from rest_framework.response import Response
 
 from api.utils import format_successful_operation
 from manager.views import make_request
-from mpesa.app_serializers import MpesaDepositErrorsSerializer, MpesaPaymentSerializer, MpesaCallbackSerializer
+from mpesa.app_serializers import MpesaDepositErrorsSerializer, MpesaPaymentSerializer, MpesaCallbackSerializer, \
+    WalletSerializer
 from mpesa.models import MpesaPayment, Wallet, MpesaWithdrawal, MpesaDepositErrors, Deposit, MpesaCallBackResponse
 from mpesa.utils import send_stk_push, verify_payment, mpesa_withdrawal, MpesaStatus
 from patient.models import Patient
@@ -158,7 +159,6 @@ def mpesa_callback(request):
             ## add to wallet
             wallet, v = Wallet.objects.get_or_create(user=mpesa_payment.user)
             wallet.amount += float(amount)
-
             wallet.save()
 
         return Response(data={}, status=status.HTTP_200_OK)
@@ -197,6 +197,20 @@ def create_withdrawal(user, amount: float, reference_number, method: str = "mpes
         user=user, amount=amount, reference_number=reference_number, method=method
     )
 
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+def get_wallet(request):
+    def get_wallet_inner(request):
+        data = request.data
+        user = request.user
+        patient = Patient.objects.get(id=user.id)
+
+        wallet, v = Wallet.objects.get_or_create(user=patient)
+        serializer = WalletSerializer(wallet)
+        return format_successful_operation(serializer.data)
+
+    return make_request(request, get_wallet_inner)
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])

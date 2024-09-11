@@ -7,12 +7,14 @@ class MpesaDepositErrorsSerializer(serializers.ModelSerializer):
         model = MpesaDepositErrors
         exclude = []
 
+
 class MpesaPaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = MpesaPayment
-        exclude = []
+        exclude = ["user" ]
+
 
 class MpesaCallbackSerializer(serializers.ModelSerializer):
     class Meta:
         model = MpesaCallBackResponse
-        exclude = []
+        exclude = ["payment"]

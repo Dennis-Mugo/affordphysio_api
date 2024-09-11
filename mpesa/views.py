@@ -280,6 +280,7 @@ def get_mpesa_transactions(request):
                 transaction_ref = MpesaCallBackResponse.objects.get(payment=detail)
                 datum["response"] = MpesaCallbackSerializer(transaction_ref).data
             except Exception as e:
+                datum["response"] = None
                 pass
 
         return format_successful_operation(data)

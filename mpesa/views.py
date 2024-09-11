@@ -160,7 +160,8 @@ def mpesa_callback(request):
             ## callback is okay
 
             ## add to wallet
-            wallet, v = Wallet.objects.get_or_create(user=mpesa_payment.user)
+            patient = Patient.objects.get(id=mpesa_payment.user.id)
+            wallet, v = Wallet.objects.get_or_create(user=patient)
             wallet.amount += float(amount)
             wallet.save()
 

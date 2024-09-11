@@ -7,11 +7,10 @@ from manager.models import Manager
 
 
 class PhysiotherapistCategories(models.Model):
-    id = models.IntegerField(primary_key=True, editable=False)
     name = models.CharField(max_length=400, unique=False)
     description = models.TextField(max_length=2000, blank=False,
                                    null=False)
-    image = models.ImageField(upload_to="assets/physiotherapist_categories/", null=True, blank=True)
+    image = models.ImageField(upload_to="assets/physiotherapist_categories/", null=False, blank=True)
 
 
 # Create your models here.

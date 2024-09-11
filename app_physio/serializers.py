@@ -34,7 +34,8 @@ class PhysioUserSerializer(serializers.ModelSerializer):
             email=validated_data["email"],
             first_name=validated_data.get("first_name", ""),
             last_name=validated_data.get("last_name", ""),
-            created_by=self.created_by
+            created_by=self.created_by,
+            image=validated_data.get("image", ""),
         )
         physiotherapist.set_password(validated_data["password"])
         physiotherapist.save()

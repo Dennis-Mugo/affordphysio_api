@@ -1,7 +1,9 @@
 import logging
+from datetime import datetime
 from gc import callbacks
 from typing import List, Dict, Any
 
+from PIL.ImagePalette import random
 from django.shortcuts import render, resolve_url, get_object_or_404
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
@@ -123,7 +125,8 @@ def mpesa_callback(request):
         if result_code != 0:
             callback = MpesaCallBackResponse.objects.create(payment=mpesa_payment, result_code=result_code,
                                                             result_description=result_description, status=result_code,
-                                                            amount=0, mpesa_receipt_number="NULL")
+                                                            amount=0, mpesa_receipt_number="SYSTEM_RAND_" + str(
+                    datetime.now().timestamp()))
             # -1 indicates an error
             mpesa_payment.status = -1
             mpesa_payment.save()

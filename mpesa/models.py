@@ -58,7 +58,7 @@ class MpesaCallBackResponse(models.Model):
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     transaction_date = models.CharField(max_length=256)
     result_description = models.CharField(max_length=256)
-    mpesa_receipt_number = models.CharField(max_length=256, null=True, blank=True)
+    mpesa_receipt_number = models.CharField(max_length=256, null=True, blank=True, unique=True)
     status = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)

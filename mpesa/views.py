@@ -21,9 +21,9 @@ from patient.models import Patient
 def format_error(errors, status_code=status.HTTP_400_BAD_REQUEST):
     return Response({
         "status": status_code,
+        "status_description": "Error occurred ",
         "errors": {"exception": [errors]},
         "data": None,
-        "status_description": "Error occurred "
     }, headers={}, status=status_code)
 
 
@@ -197,6 +197,7 @@ def create_withdrawal(user, amount: float, reference_number, method: str = "mpes
         user=user, amount=amount, reference_number=reference_number, method=method
     )
 
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
@@ -211,6 +212,7 @@ def get_wallet(request):
         return format_successful_operation(serializer.data)
 
     return make_request(request, get_wallet_inner)
+
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])

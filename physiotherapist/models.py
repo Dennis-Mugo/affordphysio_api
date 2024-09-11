@@ -10,7 +10,7 @@ class PhysiotherapistCategories(models.Model):
     name = models.CharField(max_length=400, unique=False)
     description = models.TextField(max_length=2000, blank=False,
                                    null=False)
-    image = models.ImageField(upload_to="assets/physiotherapist_categories/", null=False, blank=True)
+    image = models.ImageField(upload_to="assets/physiotherapist_categories/", null=False, blank=False)
 
 
 # Create your models here.

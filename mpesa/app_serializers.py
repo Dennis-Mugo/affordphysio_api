@@ -23,4 +23,4 @@ class MpesaCallbackSerializer(serializers.ModelSerializer):
 class WalletSerializer(serializers.ModelSerializer):
     class Meta:
         model = Wallet
-        exclude = []
+        exclude = ["user","id"]

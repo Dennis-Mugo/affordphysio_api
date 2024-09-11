@@ -548,7 +548,9 @@ def add_payment(request):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     return make_request(request, add_payment_inner)
+
 
 @api_view(["POST"])
 def get_payments(request):
@@ -579,3 +581,25 @@ def upload_profile(request):
         return Response(data, status=status.HTTP_200_OK)
 
     return make_request(request, upload_profile_internal)
+
+
+@api_view(["POST"])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def update_password(request):
+    def update_password_inner(request):
+        data = request.data
+        user: User = request.user
+        patient: Patient = Patient.objects.get(id=user.id)
+        patient.set_password(data["password"])
+        patient.save()
+        serializer = PatientSerializer(patient)
+        data = {
+            "status": status.HTTP_200_OK,
+            "status_description": "OK",
+            "errors": None,
+            "data": serializer.data
+        }
+        return Response(data, status=status.HTTP_200_OK)
+
+    return make_request(request, update_password_inner)

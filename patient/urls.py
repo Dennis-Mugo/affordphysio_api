@@ -33,4 +33,5 @@ urlpatterns = [
     path("v1/update_profile", views.upload_profile),
     path("v1/forgot_password", views.forgot_password_send_phone_number),
     path("v1/reset_password", views.reset_password_sms),
+    path("v1/update_password", views.update_password),
 ]

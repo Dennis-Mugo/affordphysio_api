@@ -118,8 +118,8 @@ def get_clinic_details(request: HttpRequest) -> HttpResponse:
         clinic_reviews = ClinicReviews.objects.filter(clinic_id=clinic.id)
         rating = clinic_reviews.aggregate(average=Avg("rating"), count=Count("rating"))
         rating_c = (ClinicReviews.objects
-                    .values('ratings')
-                    .annotate(count=Count('ratings'))).order_by()
+                    .values('rating')
+                    .annotate(count=Count('rating'))).order_by()
 
         clinic_reviews = clinic_reviews[:10]
 

@@ -1,6 +1,7 @@
 import datetime
+from typing import List, Dict
 
-from django.db.models import Q, QuerySet
+from django.db.models import Q, QuerySet, Count
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.authtoken.views import ObtainAuthToken
@@ -74,9 +75,17 @@ def get_single_physio_details(request):
         # then get reviews
         # order them by timestamp
         reviews = PatientFeedback.objects.filter(physiotherapist=physio).order_by('-timestamp')
-        #reviews = reviews.reverse()
+        # reviews = reviews.reverse()
+        # get rating distribution
+        rating_c: List[Dict[str, int]] = (PatientFeedback.objects
+                                          .values('rating')
+                                          .annotate(count=Count('rating'))).order_by()
 
-        reviews = reviews[:50]  #limit to the first 50
+        rating_c_formatted = {}
+        for i in rating_c:
+            rating_c_formatted[i["rating"]] = i["count"]
+
+        reviews = reviews[:50]  # limit to the first 50
         review_serializer = PatientFeedbackSerializer(reviews, show_patient=True, show_physio=False, many=True)
 
         response = {
@@ -87,6 +96,7 @@ def get_single_physio_details(request):
                 "user": physio_serializer.data,
                 "schedules": serializer.data,
                 "reviews": review_serializer.data,
+                "rating_distribution": rating_c_formatted,
             }
         }
         return Response(response, status=status.HTTP_200_OK)

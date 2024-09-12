@@ -118,6 +118,8 @@ def get_clinic_details(request: HttpRequest) -> HttpResponse:
         # limit reviews to 10
         clinic_reviews = ClinicReviews.objects.filter(clinic_id=clinic.id)
         rating = clinic_reviews.aggregate(average=Avg("rating"), count=Count("rating"))
+
+        # get rating distribution
         rating_c:List[Dict[str,int]] = (ClinicReviews.objects
                     .values('rating')
                     .annotate(count=Count('rating'))).order_by()
@@ -125,9 +127,6 @@ def get_clinic_details(request: HttpRequest) -> HttpResponse:
         rating_c_formatted = {}
         for i in rating_c:
             rating_c_formatted[i["rating"]] = i["count"]
-
-
-
 
         clinic_reviews = clinic_reviews[:10]
 

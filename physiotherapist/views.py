@@ -84,6 +84,10 @@ def get_single_physio_details(request):
         rating_c_formatted = {}
         for i in rating_c:
             rating_c_formatted[i["rating"]] = i["count"]
+        # prefill those missing values
+        for i in range(1, 6):
+            t = rating_c_formatted.get(i, 0)
+            rating_c_formatted[i] = t
 
         reviews = reviews[:50]  # limit to the first 50
         review_serializer = PatientFeedbackSerializer(reviews, show_patient=True, show_physio=False, many=True)

@@ -120,15 +120,20 @@ def get_clinic_details(request: HttpRequest) -> HttpResponse:
         rating = clinic_reviews.aggregate(average=Avg("rating"), count=Count("rating"))
 
         # get rating distribution
-        rating_c:List[Dict[str,int]] = (ClinicReviews.objects
-                    .values('rating')
-                    .annotate(count=Count('rating'))).order_by()
+        rating_c: List[Dict[str, int]] = (ClinicReviews.objects
+                                          .values('rating')
+                                          .annotate(count=Count('rating'))).order_by()
 
         rating_c_formatted = {}
         for i in rating_c:
             rating_c_formatted[i["rating"]] = i["count"]
 
         clinic_reviews = clinic_reviews[:10]
+
+        # prefill those missing values
+        for i in range(1, 6):
+            t = rating_c_formatted.get(i, 0)
+            rating_c_formatted[i] = t
 
         clinics_reviews_serializer = ClinicReviewsSerializer(clinic_reviews, many=True)
 

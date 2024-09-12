@@ -202,12 +202,11 @@ def create_withdrawal(user, amount: float, reference_number, method: str = "mpes
     )
 
 
-@api_view(["POST"])
+@api_view(["GET"])
 @permission_classes([IsAuthenticated])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 def get_wallet(request):
     def get_wallet_inner(request):
-        data = request.data
         user = request.user
         patient = Patient.objects.get(id=user.id)
 

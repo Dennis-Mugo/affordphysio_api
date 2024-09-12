@@ -202,7 +202,7 @@ def create_withdrawal(user, amount: float, reference_number, method: str = "mpes
     )
 
 
-@api_view(["GET"])
+@api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 def get_wallet(request):

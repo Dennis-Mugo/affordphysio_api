@@ -117,9 +117,14 @@ def get_clinic_details(request: HttpRequest) -> HttpResponse:
         # limit reviews to 10
         clinic_reviews = ClinicReviews.objects.filter(clinic_id=clinic.id)
         rating = clinic_reviews.aggregate(average=Avg("rating"), count=Count("rating"))
+        rating_c = (ClinicReviews.objects
+                    .values('ratings')
+                    .annotate(count=Count('ratings'))).order_by()
+
         clinic_reviews = clinic_reviews[:10]
 
         clinics_reviews_serializer = ClinicReviewsSerializer(clinic_reviews, many=True)
+
         response = {
             "status": status.HTTP_200_OK,
             "status_description": "OK",
@@ -131,7 +136,8 @@ def get_clinic_details(request: HttpRequest) -> HttpResponse:
                 "reviews": clinics_reviews_serializer.data,
                 "rating": {
                     "avg": rating["average"],
-                    "count": rating["count"]
+                    "count": rating["count"],
+                    "distribution": rating_c,
                 }
             }
         }

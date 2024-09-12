@@ -1,4 +1,5 @@
 import asyncio
+from typing import List, Dict
 
 import django
 from django.db.models import Q, Avg, Count
@@ -117,9 +118,16 @@ def get_clinic_details(request: HttpRequest) -> HttpResponse:
         # limit reviews to 10
         clinic_reviews = ClinicReviews.objects.filter(clinic_id=clinic.id)
         rating = clinic_reviews.aggregate(average=Avg("rating"), count=Count("rating"))
-        rating_c = (ClinicReviews.objects
+        rating_c:List[Dict[str,int]] = (ClinicReviews.objects
                     .values('rating')
                     .annotate(count=Count('rating'))).order_by()
+
+        rating_c_formatted = {}
+        for i in rating_c:
+            rating_c_formatted[i["rating"]] = i["count"]
+
+
+
 
         clinic_reviews = clinic_reviews[:10]
 
@@ -137,7 +145,7 @@ def get_clinic_details(request: HttpRequest) -> HttpResponse:
                 "rating": {
                     "avg": rating["average"],
                     "count": rating["count"],
-                    "distribution": rating_c,
+                    "distribution": rating_c_formatted,
                 }
             }
         }

@@ -294,6 +294,7 @@ def make_appointment(request):
             "physiotherapist_id": physio.id,
             "end_time": end_time,
             "status": 1,
+            "patient_problem":data["patient_problem"],
             "appointment_type": data["appointment_type"],
         }
 

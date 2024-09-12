@@ -72,6 +72,7 @@ class Appointment(models.Model):
     created_date = models.DateTimeField(auto_now_add=True)
     modified_date = models.DateTimeField(auto_now=True)
     amount = models.IntegerField(null=False, default=0)
+    patient_problem=models.CharField(null=False, max_length=500)
 
     def __str__(self):
         return self.patient.first_name + " " + self.status

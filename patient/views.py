@@ -294,7 +294,7 @@ def make_appointment(request):
             "physiotherapist_id": physio.id,
             "end_time": end_time,
             "status": 1,
-            "patient_problem":data["patient_problem"],
+            "patient_problem": data["patient_problem"],
             "appointment_type": data["appointment_type"],
         }
 
@@ -592,7 +592,9 @@ def update_password(request):
         data = request.data
         user: User = request.user
         patient: Patient = Patient.objects.get(id=user.id)
-        patient.set_password(data["password"])
+        if not patient.check_password(data["current_password"]):
+            return format_error("Current password is incorrect")
+        patient.set_password(data["new_password"])
         patient.save()
         serializer = PatientSerializer(patient)
         data = {

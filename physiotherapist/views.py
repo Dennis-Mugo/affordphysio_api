@@ -229,7 +229,6 @@ def get_physio_packages(request):
         packages = PhysioPackages.objects.all()
 
         instance = PhysioPackagesSerializer(packages, many=True)
-        instance.is_valid(raise_exception=True)
         instance.save()
         response_data = {"status": status.HTTP_200_OK,
                          "errors": None,

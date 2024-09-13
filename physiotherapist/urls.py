@@ -10,5 +10,6 @@ urlpatterns = [
     path("v1/get_physio_categories", views.get_physio_categories, name="get_physio_categories"),
     path("v1/get_physio_for_category", views.get_physios_for_category, name="get_physio_in_category"),
 
-    path("v1/add_physio_package",views.add_physio_packages, name="add_physio_packages"),
+    path("v1/add_physio_package", views.add_physio_packages, name="add_physio_packages"),
+    path("v1/get_physio_packages", views.get_physio_packages, name="get_physio_packages"),
 ]

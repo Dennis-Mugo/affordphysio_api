@@ -19,7 +19,7 @@ from manager.views import make_request
 from patient.models import PatientFeedback
 from patient.serializers import PatientFeedbackSerializer
 from physiotherapist.app_serializers import PhysioCategoriesSerializer, PhysioPackagesSerializer
-from physiotherapist.models import Physiotherapist, PhysiotherapistCategories
+from physiotherapist.models import Physiotherapist, PhysiotherapistCategories, PhysioPackages
 
 
 # Create your views here.
@@ -219,5 +219,23 @@ def add_physio_packages(request):
         return Response(response_data, status=status.HTTP_201_CREATED)
 
         pass
+
+    return make_request(request, add_physio_package_inner)
+
+
+@api_view(["GET"])
+def get_physio_packages(request):
+    def add_physio_package_inner(req):
+        packages = PhysioPackages.objects.all()
+
+        instance = PhysioPackagesSerializer(packages, many=True)
+        instance.is_valid(raise_exception=True)
+        instance.save()
+        response_data = {"status": status.HTTP_200_OK,
+                         "errors": None,
+                         "status_description": "OK",
+                         "data": instance.data}
+
+        return Response(response_data, status=status.HTTP_200_OK)
 
     return make_request(request, add_physio_package_inner)

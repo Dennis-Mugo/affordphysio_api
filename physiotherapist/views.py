@@ -1,12 +1,15 @@
 import datetime
 from typing import List, Dict
 
+from django.contrib.auth.models import User
 from django.db.models import Q, QuerySet, Count
 from django.shortcuts import get_object_or_404
 from rest_framework import status
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from api.utils import create_token
@@ -15,7 +18,7 @@ from app_physio.serializers import PhysioUserSerializer, PhysioScheduleSerialize
 from manager.views import make_request
 from patient.models import PatientFeedback
 from patient.serializers import PatientFeedbackSerializer
-from physiotherapist.app_serializers import PhysioCategoriesSerializer
+from physiotherapist.app_serializers import PhysioCategoriesSerializer, PhysioPackagesSerializer
 from physiotherapist.models import Physiotherapist, PhysiotherapistCategories
 
 
@@ -194,3 +197,27 @@ def get_physios_for_category(request):
         return Response(response_data, status=status.HTTP_200_OK)
 
     return make_request(request, get_physios_for_category_internal)
+
+
+@api_view(["POST"])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def add_physio_packages(request):
+    def add_physio_package_inner(req):
+        data = req.data
+        user: User = request.user
+        therapist: PhysioUser = PhysioUser.objects.get(id=user.id)
+
+        instance = PhysioPackagesSerializer(data=data)
+        instance.is_valid(raise_exception=True)
+        instance.save()
+        response_data = {"status": status.HTTP_201_CREATED,
+                         "errors": None,
+                         "status_description": "CREATED",
+                         "data": instance.data}
+
+        return Response(response_data, status=status.HTTP_201_CREATED)
+
+        pass
+
+    return make_request(request, add_physio_package_inner)

@@ -6,11 +6,19 @@ from rest_framework.authtoken.admin import User
 from manager.models import Manager
 
 
+
+class PhysioPackages(models.Model):
+    name = models.CharField(max_length=400, unique=True)
+    description = models.TextField(max_length=2000, blank=False,
+                                   null=False)
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+
 class PhysiotherapistCategories(models.Model):
     name = models.CharField(max_length=400, unique=False)
     description = models.TextField(max_length=2000, blank=False,
                                    null=False)
-    image = models.ImageField(upload_to="assets/physiotherapist_categories/", null=False, blank=False)
+    image = models.ImageField(upload_to="assets/physiotherapist_categories/", null=False, blank=True)
 
 
 # Create your models here.

@@ -3,10 +3,12 @@ from patient import views
 
 urlpatterns = [
     path('v1/signup', views.signup_verify),
+    path('signup_verify',views.signup_verify_web),
     path('signup_set_password', views.signup_set_password),
     path('forgot_password', views.forgot_password_send_email),
     path('reset_password', views.reset_password),
     path('v1/login', views.login),
+    path('login', views.login_old),
     path('verify_token', views.test_token),
     path('verify_email_token/<str:tokenId>', views.verify_email_token),
     path('profile/<int:patientId>', views.patient_profile),

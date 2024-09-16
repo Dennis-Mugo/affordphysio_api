@@ -35,6 +35,41 @@ import pytz
 import time
 
 
+
+@api_view(["POST"])
+def signup_verify_web(request):
+    is_resend = request.data.get("isResend", False)
+    email = request.data["email"]
+    verify_link = get_email_verification_link(email)
+    if is_resend:
+        # User data is saved but user wants to resend verification email
+        send_mail(
+            'Afford Physio Email verification',
+            f'Follow the link below to complete signing up\n\n{verify_link}\n\n The link expires in 10 minutes.',
+            'dennismthairu@gmail.com',
+            [email],
+            fail_silently=False,
+        )
+        return Response({"success": True}, status=status.HTTP_200_OK)
+
+    data = request.data | {"username": request.data["first_name"] + request.data["last_name"], "password": "amref"}
+    serializer = PatientSerializer(data=data)
+    if serializer.is_valid():
+        serializer.save()
+        # user = Patient.objects.get(email=request.data['email'])
+        # user.set_password("password")
+        # user.save()
+        # token = Token.objects.create(user=user)
+        send_mail(
+            'Afford Physio Email verification',
+            f'Follow the link below to complete signing up\n\n{verify_link}\n\n The link expires in 10 minutes.',
+            'dennismthairu@gmail.com',
+            [request.data['email']],
+            fail_silently=False,
+        )
+        return Response({'success': True}, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 @api_view(["POST"])
 def signup_verify(request):
     def signup_verify_internal(req):
@@ -156,6 +191,23 @@ def login(request):
         return create_token(serializer)
 
     return make_request(request, login_internal)
+
+
+@api_view(["POST"])
+def login_old(request):
+    user = get_object_or_404(Patient, email=request.data['email'])
+
+    if not user.check_password(request.data['password']):
+        return Response({"detail": "Email or password is incorrect"}, status=status.HTTP_404_NOT_FOUND)
+    token, created = Token.objects.get_or_create(user=user)
+    serializer = PatientSerializer(instance=user)
+
+    log = add_patient_log("Logged in", user)
+    if log != True:
+        print(log)
+        return Response(log, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    return Response({'token': token.key, 'user': serializer.data}, status=status.HTTP_201_CREATED)
 
 
 @api_view(["GET"])

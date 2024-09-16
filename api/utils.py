@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework.serializers import Serializer
 
 
-def create_token(serializer: Serializer):
+def create_token(serializer: Serializer,status_code=status.HTTP_200_OK):
     token, created = Token.objects.get_or_create(user=serializer.instance)
     response_data = {"status": status.HTTP_200_OK,
                      "status_description": "CREATED",
@@ -24,7 +24,7 @@ def create_token(serializer: Serializer):
                               }}
 
     return Response(response_data,
-                    status=status.HTTP_201_CREATED)
+                    status=status_code)
 
 
 def format_successful_operation(data: Any):

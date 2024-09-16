@@ -203,9 +203,9 @@ def login_old(request):
     serializer = PatientSerializer(instance=user)
 
     log = add_patient_log("Logged in", user)
-    if log != True:
-        print(log)
-        return Response(log, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    # if log != True:
+    #     print(log)
+    #     return Response(log, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return Response({'token': token.key, 'user': serializer.data}, status=status.HTTP_201_CREATED)
 

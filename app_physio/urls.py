@@ -3,6 +3,7 @@ from django.urls import path, include
 from app_physio import views
 
 urlpatterns = [
+    path("register", views.signup_verify),
     path('signup_set_password', views.signup_set_password),
     path('forgot_password', views.forgot_password_send_email),
     path('reset_password', views.reset_password),

@@ -1,3 +1,10 @@
 venv/
 notes.txt
 .env
+api/__pycache__/
+app_manager/__pycache__/
+app_admin/__pycache__/
+app_physio/__pycache__/
+manager/__pycache__/
+patient/__pycache__/
+physiotherapist/__pycache__/

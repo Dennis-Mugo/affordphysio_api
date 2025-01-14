@@ -5,6 +5,16 @@ from .serializers import PhysioLogSerializer
 from patient.models import Patient
 from patient.serializers import PatientSerializer
 from django.shortcuts import get_object_or_404
+from app_admin.serializers import EmailTokenSerializer
+
+
+
+def get_email_verification_link(email):
+    serializer = EmailTokenSerializer(data={})
+    if serializer.is_valid():
+        serializer.save()
+        token_id = serializer.data["id"]
+        return f"http://localhost:5173/physiotherapist/register/{email}/{token_id}"
 
 
 def add_physio_log(activity, physio):

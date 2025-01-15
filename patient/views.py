@@ -1,8 +1,8 @@
 from django.http import JsonResponse
 from .models import Patient, PatientFeedback, Appointment, Payment
 from app_admin.models import EmailToken, EducationResource, ServiceProvided
-from app_physio.models import PhysioUser, PhysioSchedule
-from app_physio.serializers import PhysioUserSerializer, PhysioScheduleSerializer
+from app_physio.models import PhysioLocation, PhysioUser, PhysioSchedule
+from app_physio.serializers import PhysioLocationSerializer, PhysioUserSerializer, PhysioScheduleSerializer
 from app_admin.serializers import EmailTokenSerializer, EdResourceSerializer, ServiceSerializer
 from .serializers import PatientSerializer, PatientFeedbackSerializer, AppointmentSerializer, AppointmentCancellationSerializer, PenaltySerializer, PaymentSerializer
 from .service import get_email_verification_link, get_password_reset_link, add_patient_log, get_physio_detail_feedback, get_physios_from_ids
@@ -592,6 +592,33 @@ def get_available_physios(request):
         return Response(res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+@api_view(["POST"])
+def get_physio_locations(request):
+    res = {
+        "data": {},
+        "errors": [],
+        "status": 200
+    }
+
+    try:
+        
+        locations = PhysioLocation.objects.all()
+        serializer = PhysioLocationSerializer(locations, many=True)
+        res["data"] = serializer.data
+        
+        for location in res["data"]:
+            physio = get_object_or_404(PhysioUser, id=location["physio"])
+            physio_serializer = PhysioUserSerializer(physio)
+            location["physio"] = physio_serializer.data
+
+        
+
+        return Response(res, status=status.HTTP_200_OK)
+    
+    except Exception as e:
+        res["errors"].append(str(e))
+        res["status"] = 500
+        return Response(res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     
 

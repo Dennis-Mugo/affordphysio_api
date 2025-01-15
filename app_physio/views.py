@@ -1,10 +1,10 @@
 from django.http import JsonResponse
-from .models import PhysioUser, PhysioSchedule, PostVisit
+from .models import PhysioLocation, PhysioUser, PhysioSchedule, PostVisit
 from app_admin.models import EmailToken
 from patient.models import Appointment, PatientFeedback, Patient
 from patient.serializers import AppointmentSerializer, PatientFeedbackSerializer, AppointmentCancellationSerializer
 from app_admin.serializers import EmailTokenSerializer
-from .serializers import PhysioUserSerializer, PhysioScheduleSerializer, PostVisitSerializer
+from .serializers import PhysioLocationSerializer, PhysioUserSerializer, PhysioScheduleSerializer, PostVisitSerializer
 from app_admin.service import get_password_reset_link_physio
 from .service import add_physio_log, get_patient_detail_appointments, get_email_verification_link
 
@@ -665,4 +665,42 @@ def get_post_visit(request):
 
 
 
+@api_view(["POST"])
+def add_physio_location(request):
+    res = {
+        "data": {},
+        "errors": [],
+        "status": 200
+    }
 
+    try:
+        data = request.data
+        physio = get_object_or_404(PhysioUser, id=data["physioId"])
+        data["physio"] = physio
+        #Check if physio already has a location
+        location = PhysioLocation.objects.filter(physio=physio)
+
+        # if location exists, update it
+        if location.exists():
+            location = location.first()
+            serializer = PhysioLocationSerializer(location, data=data, partial=True)
+            # serializer = PhysioLocationSerializer(data=data)
+        else:
+            serializer = PhysioLocationSerializer(data=data)
+
+
+        if serializer.is_valid():
+            serializer.save()
+            res["data"] = serializer.data
+            res["data"]["physio"] = PhysioUserSerializer(physio).data
+            res["status"] = 201
+            return Response(res, status=status.HTTP_201_CREATED)
+        
+        res["errors"] += [err for lst in serializer.errors.values() for err in lst]
+        res["status"] = 400
+        return Response(res, status=status.HTTP_400_BAD_REQUEST)
+    
+    except Exception as e:
+        res["errors"].append(str(e))
+        res["status"] = 500
+        return Response(res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

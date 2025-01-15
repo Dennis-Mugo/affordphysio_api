@@ -50,3 +50,14 @@ class PostVisit(models.Model):
     pain_management = models.TextField(null=False)
     feedback = models.TextField(null=False)
     date_created = models.DateTimeField(auto_now_add=True)
+
+
+class PhysioLocation(models.Model):
+    physio = models.ForeignKey(PhysioUser, on_delete=models.CASCADE)
+    latitude = models.FloatField(null=True)
+    longitude = models.FloatField(null=True)
+    date_created = models.DateTimeField(auto_now_add=True)
+    date_updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return "Latitude: " + str(self.latitude) + ", Longitude: " + str(self.longitude)

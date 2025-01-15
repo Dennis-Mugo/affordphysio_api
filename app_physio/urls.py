@@ -29,6 +29,8 @@ urlpatterns = [
     path("get_feedback", views.get_feedback),
     path("add_post_visit", views.add_post_visit),
     path("get_post_visit", views.get_post_visit),
+
+    path("save_physio_location", views.add_physio_location),
     # path("appointments", views.appointments),
 ]
 

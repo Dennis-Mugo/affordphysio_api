@@ -27,6 +27,8 @@ urlpatterns = [
     path("add_payment", views.add_payment),
     path("get_payments", views.get_payments),
 
+    path("get_physio_locations", views.get_physio_locations),
+
 
 
 ]

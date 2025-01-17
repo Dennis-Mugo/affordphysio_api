@@ -1,10 +1,10 @@
 from django.http import JsonResponse
-from .models import Patient, PatientFeedback, Appointment, Payment
+from .models import Patient, PatientFeedback, Appointment, PatientLocation, Payment
 from app_admin.models import EmailToken, EducationResource, ServiceProvided
 from app_physio.models import PhysioLocation, PhysioUser, PhysioSchedule
 from app_physio.serializers import PhysioLocationSerializer, PhysioUserSerializer, PhysioScheduleSerializer
 from app_admin.serializers import EmailTokenSerializer, EdResourceSerializer, ServiceSerializer
-from .serializers import PatientSerializer, PatientFeedbackSerializer, AppointmentSerializer, AppointmentCancellationSerializer, PenaltySerializer, PaymentSerializer
+from .serializers import PatientLocationSerializer, PatientSerializer, PatientFeedbackSerializer, AppointmentSerializer, AppointmentCancellationSerializer, PenaltySerializer, PaymentSerializer
 from .service import get_email_verification_link, get_password_reset_link, add_patient_log, get_physio_detail_feedback, get_physios_from_ids
 
 from rest_framework.response import Response
@@ -23,6 +23,7 @@ from django.core.mail import send_mail
 import datetime
 import pytz
 import time
+import json
 
 response_format = {
     "data": {},
@@ -620,6 +621,84 @@ def get_physio_locations(request):
         res["status"] = 500
         return Response(res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
+@api_view(["POST"])
+def add_patient_location(request):
+    res = {
+        "data": {},
+        "errors": [],
+        "status": 200
+    }
+
+    try:
+        data = request.data
+        patient = get_object_or_404(Patient, id=data["patientId"])
+        data["patient"] = patient
+        #Check if patient already has a location
+        location = PatientLocation.objects.filter(patient=patient)
+
+        # if location exists, update it
+        if location.exists():
+            location = location.first()
+            serializer = PatientLocationSerializer(location, data=data, partial=True)
+            # serializer = PatientLocationSerializer(data=data)
+        else:
+            serializer = PatientLocationSerializer(data=data)
+
+
+        if serializer.is_valid():
+            serializer.save()
+            res["data"] = serializer.data
+            res["data"]["patient"] = PatientSerializer(patient).data
+            res["status"] = 201
+            return Response(res, status=status.HTTP_201_CREATED)
+        
+        res["errors"] += [err for lst in serializer.errors.values() for err in lst]
+        res["status"] = 400
+        return Response(res, status=status.HTTP_400_BAD_REQUEST)
+    
+    except Exception as e:
+        res["errors"].append(str(e))
+        res["status"] = 500
+        return Response(res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(["POST"])
+def validate_payment(request):
+    accepted_result = {    
+        "ResultCode": "0",
+        "ResultDesc": "Accepted",
+    }
+    rejected_result = {
+        "ResultCode": "C2B00011",
+        "ResultDesc": "Rejected"
+    }
+    try:
+        data = request.data
+        print(data)
+        print(json.dumps(data, indent=4))
+        return Response(accepted_result, status=status.HTTP_200_OK)
+    
+    except Exception as e:
+        print(e)
+        return Response(rejected_result, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
 
+@api_view(["POST"])
+def confirm_payment(request):
+    accepted_result = {    
+        "ResultCode": "0",
+        "ResultDesc": "Accepted",
+    }
+    rejected_result = {
+        "ResultCode": "C2B00011",
+        "ResultDesc": "Rejected"
+    }
+    try:
+        data = request.data
+        print(data)
+        print(json.dumps(data, indent=4))
+        return Response(accepted_result, status=status.HTTP_200_OK)
     
+    except Exception as e:
+        print(e)
+        return Response(rejected_result, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

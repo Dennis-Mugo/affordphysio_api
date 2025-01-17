@@ -1,8 +1,8 @@
 from django.http import JsonResponse
 from .models import PhysioLocation, PhysioUser, PhysioSchedule, PostVisit
 from app_admin.models import EmailToken
-from patient.models import Appointment, PatientFeedback, Patient
-from patient.serializers import AppointmentSerializer, PatientFeedbackSerializer, AppointmentCancellationSerializer
+from patient.models import Appointment, PatientFeedback, Patient, PatientLocation
+from patient.serializers import AppointmentSerializer, PatientFeedbackSerializer, AppointmentCancellationSerializer, PatientLocationSerializer, PatientSerializer
 from app_admin.serializers import EmailTokenSerializer
 from .serializers import PhysioLocationSerializer, PhysioUserSerializer, PhysioScheduleSerializer, PostVisitSerializer
 from app_admin.service import get_password_reset_link_physio
@@ -663,6 +663,34 @@ def get_post_visit(request):
         res["status"] = 500
         return Response(res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
+@api_view(["POST"])
+def get_patient_locations(request):
+    res = {
+        "data": {},
+        "errors": [],
+        "status": 200
+    }
+
+    try:
+        
+        locations = PatientLocation.objects.all()
+        serializer = PatientLocationSerializer(locations, many=True)
+        res["data"] = serializer.data
+        
+        for location in res["data"]:
+            patient = get_object_or_404(Patient, id=location["patient"])
+            patient_serializer = PatientSerializer(patient)
+            location["patient"] = patient_serializer.data
+
+        
+
+        return Response(res, status=status.HTTP_200_OK)
+    
+    except Exception as e:
+        res["errors"].append(str(e))
+        res["status"] = 500
+        return Response(res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(["POST"])

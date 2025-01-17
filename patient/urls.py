@@ -28,6 +28,11 @@ urlpatterns = [
     path("get_payments", views.get_payments),
 
     path("get_physio_locations", views.get_physio_locations),
+    path("save_patient_location", views.add_patient_location),
+
+
+    path("validate_payment", views.validate_payment),
+    path("confirm_payment", views.confirm_payment),
 
 
 

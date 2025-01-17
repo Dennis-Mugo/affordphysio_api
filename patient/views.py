@@ -695,7 +695,7 @@ def confirm_payment(request):
         "ResultCode": "C2B00011",
         "ResultDesc": "Rejected"
     }
-    return Response(accepted_result, status=status.HTTP_200_OK)
+    
     try:
         data = request.data
         print(data)

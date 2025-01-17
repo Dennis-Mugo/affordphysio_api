@@ -664,6 +664,7 @@ def add_patient_location(request):
 
 @api_view(["POST"])
 def validate_payment(request):
+
     accepted_result = {    
         "ResultCode": "0",
         "ResultDesc": "Accepted",
@@ -672,6 +673,7 @@ def validate_payment(request):
         "ResultCode": "C2B00011",
         "ResultDesc": "Rejected"
     }
+    return Response(accepted_result, status=status.HTTP_200_OK)
     try:
         data = request.data
         print(data)
@@ -693,6 +695,7 @@ def confirm_payment(request):
         "ResultCode": "C2B00011",
         "ResultDesc": "Rejected"
     }
+    return Response(accepted_result, status=status.HTTP_200_OK)
     try:
         data = request.data
         print(data)

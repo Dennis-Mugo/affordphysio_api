@@ -89,6 +89,21 @@ class Payment(models.Model):
     status = models.CharField(max_length=50, null=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 
+class MPesaPayment(models.Model):
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
+    amount = models.FloatField(null=True)
+    phone_number = models.CharField(max_length=15, null=True)
+    date_created = models.DateTimeField(auto_now_add=True)
+    date_updated = models.DateTimeField(auto_now=True)
+    status = models.CharField(max_length=50, null=True)
+    status_message = models.CharField(max_length=50, null=True)
+    request_id = models.CharField(max_length=50, null=True)
+    checkout_id = models.CharField(max_length=50, null=True)
+
+
+    def __str__(self):
+        return self.patient.email + " " + str(self.amount)
+
 
 class PatientLocation(models.Model):
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE)

@@ -22,6 +22,7 @@ class Patient(User):
     occupation = models.CharField(max_length=50, null=True)
     chronic_disease_history = models.TextField(null=True)
     hobby = models.CharField(max_length=50, null=True)
+    home_address = models.TextField(null=True)
 
     def __str__(self):
         return str(self.id) + " " + self.email

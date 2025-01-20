@@ -100,6 +100,7 @@ def signup_set_password(request):
         first_name = request.data["firstName"]
         surname = request.data["surname"]
         password = request.data["password"]
+        home_address = request.data["homeAddress"]
 
         
         #Check if user with this email exists
@@ -117,6 +118,7 @@ def signup_set_password(request):
             "last_name": surname,
             "email": email,
             "username": username,
+            "home_address": home_address
         })
 
     
@@ -843,6 +845,7 @@ def confirm_payment(request):
         if result_code == 0:
             payment = get_object_or_404(MPesaPayment, request_id=request_id, checkout_id=checkout_id)
             payment.status = "completed"
+            payment.status_message = obj["ResultDesc"]
             payment.save()
             return Response(accepted_result, status=status.HTTP_200_OK)
         

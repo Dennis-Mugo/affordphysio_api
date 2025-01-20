@@ -1,10 +1,12 @@
 from django.http import JsonResponse
-from .models import Patient, PatientFeedback, Appointment, PatientLocation, Payment
+
+from patient.mpesa_service import send_stk_push
+from .models import MPesaPayment, Patient, PatientFeedback, Appointment, PatientLocation, Payment
 from app_admin.models import EmailToken, EducationResource, ServiceProvided
 from app_physio.models import PhysioLocation, PhysioUser, PhysioSchedule
 from app_physio.serializers import PhysioLocationSerializer, PhysioUserSerializer, PhysioScheduleSerializer
 from app_admin.serializers import EmailTokenSerializer, EdResourceSerializer, ServiceSerializer
-from .serializers import PatientLocationSerializer, PatientSerializer, PatientFeedbackSerializer, AppointmentSerializer, AppointmentCancellationSerializer, PenaltySerializer, PaymentSerializer
+from .serializers import MPesaPaymentSerializer, PatientLocationSerializer, PatientSerializer, PatientFeedbackSerializer, AppointmentSerializer, AppointmentCancellationSerializer, PenaltySerializer, PaymentSerializer
 from .service import get_email_verification_link, get_password_reset_link, add_patient_log, get_physio_detail_feedback, get_physios_from_ids
 
 from rest_framework.response import Response
@@ -95,13 +97,46 @@ def signup_set_password(request):
     }
     try:
         email = request.data["email"]
-        user = get_object_or_404(Patient, email=email)
-        user.set_password(request.data['password'])
-        user.save()
-        serializer = PatientSerializer(user)
-        res["data"] = serializer.data
-        res["errors"] = []
-        return Response(res, status=status.HTTP_201_CREATED)
+        first_name = request.data["firstName"]
+        surname = request.data["surname"]
+        password = request.data["password"]
+
+        
+        #Check if user with this email exists
+        user = Patient.objects.filter(email=email)
+        if user.exists():
+            res["errors"].append("A user with that email already exists.")
+            res["status"] = 400
+            return Response(res, status=status.HTTP_400_BAD_REQUEST)
+
+
+        username = first_name + surname
+
+        serializer = PatientSerializer(data={
+            "first_name": first_name,
+            "last_name": surname,
+            "email": email,
+            "username": username,
+        })
+
+    
+
+        if serializer.is_valid():
+            serializer.save()
+            #Set the password
+            user = Patient.objects.get(email=email)
+            user.set_password(password)
+            user.save()
+
+            res["data"] = serializer.data
+            res["errors"] = []
+            res["status"] = 201
+            return Response(res, status=status.HTTP_201_CREATED)
+        
+        res["errors"] += [err for lst in serializer.errors.values() for err in lst]
+        res["status"] = 400
+        return Response(res, status=status.HTTP_400_BAD_REQUEST)
+    
     except Exception as e:
         res["errors"].append(str(e))
         res["status"] = 500
@@ -373,6 +408,13 @@ def appointments(request):
             serializer = AppointmentSerializer(data=obj)
             if serializer.is_valid():
                 serializer.save()
+                send_mail(
+                    'Afford Physio Appointment Confirmation',
+                    f'You have successfully created an appointment with Dr. {physio.first_name} {physio.last_name}.\n\n Your appointment is in review and you will be notified once it is accepted.\n\n Thank you for choosing Afford Physio.',
+                    'dennismthairu@gmail.com',
+                    [patient.email],
+                    fail_silently=False,
+                )
                 res["data"] = serializer.data
                 res["status"] = 201
                 return Response(res, status=status.HTTP_201_CREATED)
@@ -418,6 +460,49 @@ def appointments(request):
         res["status"] = 500
         return Response(res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
+
+@api_view(["POST"])
+def get_upcoming_appointments(request):
+    res = {
+        "data": {},
+        "errors": [],
+        "status": 200
+    }
+    try:
+        patient = get_object_or_404(Patient, id=request.data["patientId"])
+        #Check if appointment status=accepted and is in the future
+        appointments = Appointment.objects.filter(patient=patient, timestamp__gte=datetime.datetime.now(), status="accepted")
+        serializer = AppointmentSerializer(appointments, many=True)
+        data = get_physio_detail_feedback(serializer.data)
+        res["data"] = data
+        return Response(res, status=status.HTTP_200_OK)
+    
+    except Exception as e:
+        res["errors"].append(str(e))
+        res["status"] = 500
+        return Response(res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+@api_view(["POST"])
+def get_completed_appointments(request):
+    res = {
+        "data": {},
+        "errors": [],
+        "status": 200
+    }
+    try:
+        patient = get_object_or_404(Patient, id=request.data["patientId"])
+        #Check if appointment status=completed
+        appointments = Appointment.objects.filter(patient=patient, status="completed")
+        serializer = AppointmentSerializer(appointments, many=True)
+        data = get_physio_detail_feedback(serializer.data)
+        res["data"] = data
+        return Response(res, status=status.HTTP_200_OK)
+    
+    except Exception as e:
+        res["errors"].append(str(e))
+        res["status"] = 500
+        return Response(res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 @api_view(["POST"])
 def cancel_appointment(request):
     res = {
@@ -684,6 +769,55 @@ def validate_payment(request):
         print(e)
         return Response(rejected_result, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
+@api_view(["POST"])
+def send_prompt(request):
+    res = {
+        "data": {},
+        "errors": [],
+        "status": 200
+    }
+    try:
+        phone_number = request.data["phoneNumber"]
+        patient_id = request.data["patientId"]
+        amount = 1
+        promptResult = send_stk_push(phone_number, amount)
+        if promptResult.get("errorMessage", False):
+            res["status"] = 400
+            res["errors"].append(promptResult["errorMessage"])
+            return Response(res, status=status.HTTP_400_BAD_REQUEST)
+        
+        if promptResult.get("ResponseDescription", False):
+            obj = {
+                "request_id": promptResult["MerchantRequestID"],
+                "checkout_id": promptResult["CheckoutRequestID"],
+                "amount": amount,
+                "phone_number": phone_number,
+                "patient": patient_id,
+                "status": "pending"
+            }
+            serializer = MPesaPaymentSerializer(data=obj)
+            if serializer.is_valid():
+                serializer.save()
+            else:
+                res["status"] = 400
+                res["errors"] += [err for lst in serializer.errors.values() for err in lst]
+                return Response(res, status=status.HTTP_400_BAD_REQUEST)
+            
+            res["status"] = 200
+            res["data"] = {**promptResult, "paymentId": serializer.data["id"]}
+            return Response(res, status=status.HTTP_200_OK)
+        
+        res["status"] = 500
+        res["errors"].append(promptResult)
+        return Response(res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    except Exception as e:
+        res["errors"].append(str(e))
+        res["status"] = 500
+        return Response(res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+
+    
 
 @api_view(["POST"])
 def confirm_payment(request):
@@ -700,8 +834,46 @@ def confirm_payment(request):
         data = request.data
         print(data)
         print(json.dumps(data, indent=4))
+
+        obj = data["Body"]["stkCallback"]
+        request_id = obj["MerchantRequestID"]
+        checkout_id = obj["CheckoutRequestID"]
+        result_code = obj["ResultCode"]
+
+        if result_code == 0:
+            payment = get_object_or_404(MPesaPayment, request_id=request_id, checkout_id=checkout_id)
+            payment.status = "completed"
+            payment.save()
+            return Response(accepted_result, status=status.HTTP_200_OK)
+        
+        else:
+            payment = get_object_or_404(MPesaPayment, request_id=request_id, checkout_id=checkout_id)
+            payment.status = "failed"
+            payment.status_message = obj["ResultDesc"]
+            payment.save()
+            
         return Response(accepted_result, status=status.HTTP_200_OK)
     
     except Exception as e:
         print(e)
         return Response(rejected_result, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+
+
+@api_view(["POST"])
+def check_payment_status(request):
+    res = {
+        "data": {},
+        "errors": [],
+        "status": 200
+    }
+    try:
+        payment_id = request.data["paymentId"]
+        payment = get_object_or_404(MPesaPayment, id=payment_id)
+        serializer = MPesaPaymentSerializer(payment)
+        res["data"] = serializer.data
+        return Response(res, status=status.HTTP_200_OK)
+    except Exception as e:
+        res["errors"].append(str(e))
+        res["status"] = 500
+        return Response(res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

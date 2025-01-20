@@ -831,6 +831,7 @@ def confirm_payment(request):
         "ResultCode": "C2B00011",
         "ResultDesc": "Rejected"
     }
+    return Response(rejected_result, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     try:
         data = request.data

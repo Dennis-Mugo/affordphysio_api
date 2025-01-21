@@ -41,6 +41,15 @@ def signup_verify(request):
     try:
         is_resend = request.data.get("isResend", False)
         email = request.data["email"]
+
+        user = PhysioUser.objects.filter(email=email)
+        if user.exists():
+            res["errors"].append("A user with that email already exists.")
+            res["status"] = 400
+            return Response(res, status=status.HTTP_400_BAD_REQUEST)
+        
+        
+
         verify_link = get_email_verification_link(email)
         if is_resend:
             #User data is saved but user wants to resend verification email
@@ -56,7 +65,8 @@ def signup_verify(request):
             return Response(res, status=status.HTTP_200_OK)
         
 
-        data = request.data | {"username": request.data["first_name"] + request.data["last_name"], "password": "amref"}
+        # data = request.data | {"username": request.data["first_name"] + request.data["last_name"], "password": "amref"}
+        data = {**request.data, "username": email}
         serializer = PhysioUserSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
@@ -89,16 +99,60 @@ def signup_set_password(request):
         "errors": [],
         "status": 200
     }
-
     try:
         email = request.data["email"]
-        user = get_object_or_404(PhysioUser, email=email)
-        user.set_password(request.data['password'])
-        user.save()
-        serializer = PhysioUserSerializer(user)
-        res["data"] = serializer.data
-        res["status"] = 201
-        return Response(res, status=status.HTTP_201_CREATED)
+        first_name = request.data["firstName"]
+        surname = request.data["surname"]
+        password = request.data["password"]
+        phone_number = request.data["phoneNumber"]
+        pck = request.data["pckNumber"]
+        specialty = request.data["specialization"]
+        clinic = request.data["clinic"]
+
+        
+        #Check if user with this email exists
+        user = PhysioUser.objects.filter(email=email)
+        if not user.exists():
+            res["errors"].append(f"No user exists with email '{email}'")
+            res["status"] = 400
+            return Response(res, status=status.HTTP_400_BAD_REQUEST)
+
+        user = PhysioUser.objects.get(email=email)
+        username = first_name + surname
+
+        #Update user using serializer
+
+
+
+        serializer = PhysioUserSerializer(user, data={
+            "first_name": first_name,
+            "last_name": surname,
+            "email": email,
+            "username": username,
+            "phone_number": phone_number,
+            "pck_number": pck,
+            "specialty": specialty,
+            "clinic": clinic
+        })
+
+    
+
+        if serializer.is_valid():
+            serializer.save()
+            #Set the password
+            user = PhysioUser.objects.get(email=email)
+            user.set_password(password)
+            
+            user.save()
+
+            res["data"] = serializer.data
+            res["errors"] = []
+            res["status"] = 201
+            return Response(res, status=status.HTTP_201_CREATED)
+        
+        res["errors"] += [err for lst in serializer.errors.values() for err in lst]
+        res["status"] = 400
+        return Response(res, status=status.HTTP_400_BAD_REQUEST)
     
     except Exception as e:
         res["errors"].append(str(e))
@@ -173,6 +227,9 @@ def login(request):
             res["errors"].append("Password is incorrect")
             res["status"] = 404
             return Response(res, status=status.HTTP_404_NOT_FOUND)
+        
+    
+
         token, created = Token.objects.get_or_create(user=user)
         serializer = PhysioUserSerializer(instance=user)
 
@@ -184,8 +241,8 @@ def login(request):
             return Response(res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         res["data"] = {'token': token.key, 'user': serializer.data}
-        res["status"] = 201
-        return Response(res, status=status.HTTP_201_CREATED)
+        res["status"] = 200
+        return Response(res, status=status.HTTP_200_OK)
     
     except Exception as e:
         res["errors"].append(str(e))
@@ -313,6 +370,59 @@ def get_feedback(request):
         serializer = PatientFeedbackSerializer(feedback_list, many=True)
         data = get_patient_detail_appointments(serializer.data)
         res["data"] = data
+        return Response(res, status=status.HTTP_200_OK)
+    
+    except Exception as e:
+        res["errors"].append(str(e))
+        res["status"] = 500
+        return Response(res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(["POST"])
+def get_average_rating(request):
+    res = {
+        "data": {},
+        "errors": [],
+        "status": 200
+    }
+    try:
+        physio_id = request.data["physioId"]
+        physio = get_object_or_404(PhysioUser, id=physio_id)
+        feedback_list = PatientFeedback.objects.filter(physiotherapist=physio)
+        serializer = PatientFeedbackSerializer(feedback_list, many=True)
+        #Calculate the average rating
+        total_rating = 0
+        for feedback in serializer.data:
+            total_rating += feedback["rating"]
+        
+        average_rating = total_rating / len(serializer.data)
+        #Set average_rating to one decimal place
+        average_rating = round(average_rating, 1)
+        # get the number of ratings
+        num_ratings = len(serializer.data)
+        # get the number of comments
+        num_comments = 0
+        for feedback in serializer.data:
+            if feedback["comments"] != "False":
+                num_comments += 1
+        num_reviews = len(serializer.data)
+
+        stars_count = [0, 0, 0, 0, 0]
+        for feedback in serializer.data:
+            stars_count[feedback["rating"] - 1] += 1
+
+        
+
+        res["data"] = {
+            "average_rating": average_rating, 
+            "num_ratings": num_ratings, 
+            "num_comments": num_comments,
+            "num_reviews": num_reviews,
+            "num_5stars": stars_count[4],
+            "num_4stars": stars_count[3],
+            "num_3stars": stars_count[2],
+            "num_2stars": stars_count[1],
+            "num_1stars": stars_count[0]
+            }
         return Response(res, status=status.HTTP_200_OK)
     
     except Exception as e:

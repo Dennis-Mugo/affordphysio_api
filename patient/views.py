@@ -344,7 +344,7 @@ def add_feedback(request):
         data_obj = {
             "patient": get_object_or_404(Patient, id=data["patientId"]),
             "physiotherapist": get_object_or_404(PhysioUser, id=data["physioId"]),
-            "comments": data['comments'],
+            "comments": data.get('comments', "False"),
             "rating": data["rating"],
             "timestamp": datetime.datetime.fromtimestamp(data["timestamp"])  
         }
@@ -748,6 +748,55 @@ def add_patient_location(request):
         res["errors"].append(str(e))
         res["status"] = 500
         return Response(res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(["POST"])
+def physios_near_me(request):
+    #Get the patient's location
+    # Get the physio locations
+    # Calculate the distance between the patient and the physio
+    # Return the physios within a certain radius
+    # Return the physios in order of distance
+    # Return the physios with their schedules
+    res = {
+        "data": {},
+        "errors": [],
+        "status": 200
+    }
+
+    try:
+        patient_id = request.data["patientId"]
+        patient = get_object_or_404(Patient, id=patient_id)
+        patient_location = get_object_or_404(PatientLocation, patient=patient)
+        patient_lat = patient_location.latitude
+        patient_lon = patient_location.longitude
+
+        physio_locations = PhysioLocation.objects.all()
+        serializer = PhysioLocationSerializer(physio_locations, many=True)
+        data = serializer.data
+        for location in data:
+            physio = get_object_or_404(PhysioUser, id=location["physio"])
+            physio_serializer = PhysioUserSerializer(physio)
+            #Get the distance between the patient and the physio using euclidean distance
+            physio_lat = location["latitude"]
+            physio_lon = location["longitude"]
+            distance = ((physio_lat - patient_lat) ** 2 + (physio_lon - patient_lon) ** 2) ** 0.5
+            location["distance"] = distance
+
+            
+
+            location["physio"] = physio_serializer.data
+
+        data = sorted(data, key=lambda x: x["distance"])
+        #Get the first 5 physios
+        data = data[:5]
+
+        res["data"] = data
+        return Response(res, status=status.HTTP_200_OK)  
+
+    except Exception as e:
+        res["errors"].append(str(e))
+        res["status"] = 500
+        return Response(res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)      
 
 @api_view(["POST"])
 def validate_payment(request):

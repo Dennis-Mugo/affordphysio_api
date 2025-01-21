@@ -13,6 +13,7 @@ class PhysioUser(User):
     years_of_experience = models.IntegerField(null=True)
     specialty = models.TextField(null=True)
     pck_number = models.IntegerField(null=True)
+    clinic = models.CharField(max_length=50, null=True)
 
     def __str__(self):
         return str(self.id) + " " + self.first_name

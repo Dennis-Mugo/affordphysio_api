@@ -31,6 +31,7 @@ urlpatterns = [
 
     path("get_physio_locations", views.get_physio_locations),
     path("save_patient_location", views.add_patient_location),
+    path("physios_near_me", views.physios_near_me),
 
     path("send_mpesa_prompt", views.send_prompt),
     path("check_payment_status", views.check_payment_status),

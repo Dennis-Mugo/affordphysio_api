@@ -1,5 +1,6 @@
 from django.http import JsonResponse
 
+from app_physio.service import calculate_review_stats
 from patient.mpesa_service import send_stk_push
 from .models import MPesaPayment, Patient, PatientFeedback, Appointment, PatientLocation, Payment
 from app_admin.models import EmailToken, EducationResource, ServiceProvided
@@ -789,6 +790,12 @@ def physios_near_me(request):
         data = sorted(data, key=lambda x: x["distance"])
         #Get the first 5 physios
         data = data[:5]
+        for location in data:
+            physio = get_object_or_404(PhysioUser, id=location["physio"]["id"])
+            feedbacks = PatientFeedback.objects.filter(physiotherapist=physio)
+            feedback_serializer = PatientFeedbackSerializer(feedbacks, many=True)
+            feedback_stats = calculate_review_stats(feedback_serializer)
+            location["physio"]["feedback_stats"] = feedback_stats
 
         res["data"] = data
         return Response(res, status=status.HTTP_200_OK)  

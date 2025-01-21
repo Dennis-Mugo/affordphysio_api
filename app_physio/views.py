@@ -6,7 +6,7 @@ from patient.serializers import AppointmentSerializer, PatientFeedbackSerializer
 from app_admin.serializers import EmailTokenSerializer
 from .serializers import PhysioLocationSerializer, PhysioUserSerializer, PhysioScheduleSerializer, PostVisitSerializer
 from app_admin.service import get_password_reset_link_physio
-from .service import add_physio_log, get_patient_detail_appointments, get_email_verification_link
+from .service import add_physio_log, calculate_review_stats, get_patient_detail_appointments, get_email_verification_link
 
 from rest_framework.response import Response
 from rest_framework import status
@@ -389,40 +389,8 @@ def get_average_rating(request):
         physio = get_object_or_404(PhysioUser, id=physio_id)
         feedback_list = PatientFeedback.objects.filter(physiotherapist=physio)
         serializer = PatientFeedbackSerializer(feedback_list, many=True)
-        #Calculate the average rating
-        total_rating = 0
-        for feedback in serializer.data:
-            total_rating += feedback["rating"]
-        
-        average_rating = total_rating / len(serializer.data)
-        #Set average_rating to one decimal place
-        average_rating = round(average_rating, 1)
-        # get the number of ratings
-        num_ratings = len(serializer.data)
-        # get the number of comments
-        num_comments = 0
-        for feedback in serializer.data:
-            if feedback["comments"] != "False":
-                num_comments += 1
-        num_reviews = len(serializer.data)
-
-        stars_count = [0, 0, 0, 0, 0]
-        for feedback in serializer.data:
-            stars_count[feedback["rating"] - 1] += 1
-
-        
-
-        res["data"] = {
-            "average_rating": average_rating, 
-            "num_ratings": num_ratings, 
-            "num_comments": num_comments,
-            "num_reviews": num_reviews,
-            "num_5stars": stars_count[4],
-            "num_4stars": stars_count[3],
-            "num_3stars": stars_count[2],
-            "num_2stars": stars_count[1],
-            "num_1stars": stars_count[0]
-            }
+        stats_obj = calculate_review_stats(serializer)
+        res["data"] = stats_obj
         return Response(res, status=status.HTTP_200_OK)
     
     except Exception as e:

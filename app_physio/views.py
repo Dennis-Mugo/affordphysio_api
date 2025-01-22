@@ -6,7 +6,7 @@ from patient.serializers import AppointmentSerializer, PatientFeedbackSerializer
 from app_admin.serializers import EmailTokenSerializer
 from .serializers import PhysioLocationSerializer, PhysioUserSerializer, PhysioScheduleSerializer, PostVisitSerializer
 from app_admin.service import get_password_reset_link_physio
-from .service import add_physio_log, calculate_review_stats, get_patient_detail_appointments, get_email_verification_link
+from .service import add_physio_log, calculate_review_stats, get12hour, get_datefromtimestamp, get_patient_detail_appointments, get_email_verification_link, get_timefromtimestamp
 
 from rest_framework.response import Response
 from rest_framework import status
@@ -435,6 +435,40 @@ def appointments(request):
             if serializer.is_valid():
                 serializer.save()
                 res["data"] = serializer.data
+                
+
+                physio = get_object_or_404(PhysioUser, id=serializer.data["physiotherapist"])
+                patient = get_object_or_404(Patient, id=serializer.data["patient"])
+                if serializer.data["status"] == "accepted":
+                    timestamp = serializer.data["timestamp"]
+                    date = get_datefromtimestamp(timestamp)
+                    start_time = get_timefromtimestamp(timestamp)
+                    end_time = get12hour(serializer.data["end_time"])
+
+                    send_mail(
+                        'Afford Physio Appointment Approval',
+                        f'Your appointment with {physio.first_name + " " + physio.last_name} has been approved.\n\n Appointment Date: {date}\n\nStart Time: {start_time}\n\nEnd Time: {end_time}',
+                        'dennismthairu@gmail.com',
+                        [patient.email],
+                        fail_silently=False,
+                    )
+                elif serializer.data["status"] == "declined":
+                    send_mail(
+                        'Afford Physio Appointment Decline',
+                        f'Your appointment with {physio.first_name + " " + physio.last_name} has been declined.',
+                        'dennismthairu@gmail.com',
+                        [patient.email],
+                        fail_silently=False,
+                    )
+                elif serializer.data["status"] == "completed":
+                    send_mail(
+                        'Afford Physio Appointment Completed',
+                        f'Your appointment with {physio.first_name + " " + physio.last_name} has been completed.\n\nPlease provide feedback on the service provided. Thank you for choosing Afford Physio.',
+                        'dennismthairu@gmail.com',
+                        [patient.email],
+                        fail_silently=False,
+                    )
+                
                 return Response(res, status=status.HTTP_200_OK)
             
             res["errors"] += [err for lst in serializer.errors.values() for err in lst]
@@ -442,6 +476,7 @@ def appointments(request):
             return Response(res, status=status.HTTP_400_BAD_REQUEST)
         
     except Exception as e:
+        res["data"] = {}
         res["errors"].append(str(e))
         res["status"] = 500
         return Response(res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -666,16 +701,33 @@ def reschedule_appointment(request):
             (data["startTime"]["hour"] * 60 * 60) + \
             (data["startTime"]["minute"] * 60))
             request.data["end_time"] = datetime.time(hour=data["endTime"]["hour"], minute=data["endTime"]["minute"])
+            request.data["status"] = "accepted"
             serializer = AppointmentSerializer(appointment, data=request.data, partial=True)
             if serializer.is_valid():
                 serializer.save()
                 res["data"] = serializer.data
+                physio = get_object_or_404(PhysioUser, id=serializer.data["physiotherapist"])
+                patient = get_object_or_404(Patient, id=serializer.data["patient"])
+                timestamp = serializer.data["timestamp"]
+                date = get_datefromtimestamp(timestamp)
+                start_time = get_timefromtimestamp(timestamp)
+                end_time = get12hour(serializer.data["end_time"])
+
+                send_mail(
+                    'Afford Physio Appointment Rescheduled',
+                    f'Your appointment with {physio.first_name + " " + physio.last_name} has been rescheduled.\n\n Appointment Date: {date}\n\nStart Time: {start_time}\n\nEnd Time: {end_time}',
+                    'dennismthairu@gmail.com',
+                    [patient.email],
+                    fail_silently=False,
+                )
                 return Response(res, status=status.HTTP_200_OK)
             
+
             res["errors"] += [err for lst in serializer.errors.values() for err in lst]
             res["status"] = 400
             return Response(res, status=status.HTTP_400_BAD_REQUEST)
         else:
+            res["data"] = {}
             res["errors"].append("One of the required field values is missing")
             res["status"] = 400
             return Response(res, status=status.HTTP_400_BAD_REQUEST)

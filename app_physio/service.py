@@ -46,6 +46,29 @@ def get_patient_detail_appointments(logs):
         res.append(log)
     return res
 
+def get_datefromtimestamp(timestamp):
+    dt = datetime.datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%SZ")
+
+   
+    formatted_date = dt.strftime("%d %B %Y")
+
+    
+    day = int(dt.strftime("%d"))
+    suffix = "th" if 11 <= day <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(day % 10, "th")
+    formatted_date_with_suffix = f"{day}{suffix} {dt.strftime('%B %Y')}"
+    return formatted_date_with_suffix
+
+def get_timefromtimestamp(timestamp):
+    dt = datetime.datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%SZ")
+    formatted_time = dt.strftime("%I:%M%p").lower()
+    return formatted_time
+
+def get12hour(time_24_hour):
+    time_object = datetime.datetime.strptime(time_24_hour, "%H:%M:%S")
+    time_12_hour = time_object.strftime("%I:%M%p").lower()
+    return time_12_hour
+
+
 def calculate_review_stats(serializer):
     #Calculate the average rating
     total_rating = 0

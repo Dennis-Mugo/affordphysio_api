@@ -102,6 +102,7 @@ def signup_set_password(request):
         surname = request.data["surname"]
         password = request.data["password"]
         home_address = request.data["homeAddress"]
+        phone_number = request.data["phoneNumber"]
 
         
         #Check if user with this email exists
@@ -119,7 +120,8 @@ def signup_set_password(request):
             "last_name": surname,
             "email": email,
             "username": username,
-            "home_address": home_address
+            "home_address": home_address,
+            "phone_number": phone_number
         })
 
     
@@ -349,6 +351,7 @@ def add_feedback(request):
             "rating": data["rating"],
             "timestamp": datetime.datetime.fromtimestamp(data["timestamp"])  
         }
+        
         serializer = PatientFeedbackSerializer(data=data_obj)
         if serializer.is_valid():
             serializer.save()

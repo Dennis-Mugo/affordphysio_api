@@ -26,6 +26,11 @@ from rest_framework.permissions import IsAuthenticated
 from django.core.mail import send_mail
 import datetime
 import time
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
+sender_email = os.getenv("EMAIL_HOST_USER")
 
 @api_view(['GET', 'POST'])
 def manager_list(request):
@@ -66,7 +71,7 @@ def forgot_password_send_email(request):
     send_mail(
         'Afford Physio Password Reset',
         f'Follow the link below to change your password\n\n{password_change_link}\n\n The link expires in 10 minutes.',
-        'dennismthairu@gmail.com',
+        sender_email,
         [email],
         fail_silently=False,
     )
@@ -173,7 +178,7 @@ def add_physio(request):
         send_mail(
             'Afford Physio Email verification',
             f'Follow the link below to complete signing up\n\n{verify_link}\n\n The link expires in 10 minutes.',
-            'dennismthairu@gmail.com', 
+            sender_email, 
             [request.data['email']],
             fail_silently=False,
         )
@@ -200,7 +205,7 @@ def add_physio(request):
         send_mail(
             'Afford Physio Email verification',
             f'Follow the link below to complete signing up\n\n{verify_link}\n\n The link expires in 10 minutes.',
-            'dennismthairu@gmail.com', 
+            sender_email, 
             [data_obj['email']],
             fail_silently=False,
         )

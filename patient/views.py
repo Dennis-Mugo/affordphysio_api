@@ -27,6 +27,12 @@ import datetime
 import pytz
 import time
 import json
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+sender_email = os.getenv("EMAIL_HOST_USER")
 
 response_format = {
     "data": {},
@@ -51,7 +57,7 @@ def signup_verify(request):
             send_mail(
                 'Afford Physio Email verification',
                 f'Follow the link below to complete signing up\n\n{verify_link}\n\n The link expires in 10 minutes.',
-                'dennismthairu@gmail.com',
+                sender_email,
                 [email],
                 fail_silently=False,
             )
@@ -71,7 +77,7 @@ def signup_verify(request):
             send_mail(
                 'Afford Physio Email verification',
                 f'Follow the link below to complete signing up\n\n{verify_link}\n\n The link expires in 10 minutes.',
-                'dennismthairu@gmail.com',
+                sender_email,
                 [request.data['email']],
                 fail_silently=False,
             )
@@ -157,13 +163,14 @@ def forgot_password_send_email(request):
     }
     try: 
         email = request.data["email"]
+        print(sender_email)
         user = get_object_or_404(Patient, email=email)
         # Send email with link to take them to forgot password page
         password_change_link = get_password_reset_link(email)
         send_mail(
             'Afford Physio Password Reset',
             f'Follow the link below to change your password\n\n{password_change_link}\n\n The link expires in 10 minutes.',
-            'dennismthairu@gmail.com',
+            sender_email,
             [email],
             fail_silently=False,
         )
@@ -417,7 +424,7 @@ def appointments(request):
                 send_mail(
                     'Afford Physio Appointment Confirmation',
                     f'You have successfully created an appointment with Dr. {physio.first_name} {physio.last_name}.\n\n Your appointment is in review and you will be notified once it is accepted.\n\n Thank you for choosing Afford Physio.',
-                    'dennismthairu@gmail.com',
+                    sender_email,
                     [patient.email],
                     fail_silently=False,
                 )

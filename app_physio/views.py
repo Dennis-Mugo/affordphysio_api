@@ -24,6 +24,12 @@ from django.core.mail import send_mail
 import datetime
 import pytz
 import time
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+sender_email = os.getenv("EMAIL_HOST_USER")
 
 response_format = {
         "data": {},
@@ -56,7 +62,7 @@ def signup_verify(request):
             send_mail(
                 'Afford Physio Email verification',
                 f'Follow the link below to complete signing up\n\n{verify_link}\n\n The link expires in 10 minutes.',
-                'dennismthairu@gmail.com',
+                sender_email,
                 [email],
                 fail_silently=False,
             )
@@ -73,7 +79,7 @@ def signup_verify(request):
             send_mail(
                 'Afford Physio Email verification',
                 f'Follow the link below to complete signing up\n\n{verify_link}\n\n The link expires in 10 minutes.',
-                'dennismthairu@gmail.com',
+                sender_email,
                 [request.data['email']],
                 fail_silently=False,
             )
@@ -174,7 +180,7 @@ def forgot_password_send_email(request):
         send_mail(
             'Afford Physio Password Reset',
             f'Follow the link below to change your password\n\n{password_change_link}\n\n The link expires in 10 minutes.',
-            'dennismthairu@gmail.com',
+            sender_email,
             [email],
             fail_silently=False,
         )
@@ -448,7 +454,7 @@ def appointments(request):
                     send_mail(
                         'Afford Physio Appointment Approval',
                         f'Your appointment with {physio.first_name + " " + physio.last_name} has been approved.\n\n Appointment Date: {date}\n\nStart Time: {start_time}\n\nEnd Time: {end_time}',
-                        'dennismthairu@gmail.com',
+                        sender_email,
                         [patient.email],
                         fail_silently=False,
                     )
@@ -456,7 +462,7 @@ def appointments(request):
                     send_mail(
                         'Afford Physio Appointment Decline',
                         f'Your appointment with {physio.first_name + " " + physio.last_name} has been declined.',
-                        'dennismthairu@gmail.com',
+                        sender_email,
                         [patient.email],
                         fail_silently=False,
                     )
@@ -464,7 +470,7 @@ def appointments(request):
                     send_mail(
                         'Afford Physio Appointment Completed',
                         f'Your appointment with {physio.first_name + " " + physio.last_name} has been completed.\n\nPlease provide feedback on the service provided. Thank you for choosing Afford Physio.',
-                        'dennismthairu@gmail.com',
+                        sender_email,
                         [patient.email],
                         fail_silently=False,
                     )
@@ -540,7 +546,7 @@ def cancel_appointment(request):
             send_mail(
             'Afford Physio Appointment Cancellation',
             f'Your appointment with {physio.first_name + " " + physio.last_name} has been cancelled due to the following reason:\n\n{data["reason"]}',
-            'dennismthairu@gmail.com',
+            sender_email,
             [patient.email],
             fail_silently=False,
         )
@@ -716,7 +722,7 @@ def reschedule_appointment(request):
                 send_mail(
                     'Afford Physio Appointment Rescheduled',
                     f'Your appointment with {physio.first_name + " " + physio.last_name} has been rescheduled.\n\n Appointment Date: {date}\n\nStart Time: {start_time}\n\nEnd Time: {end_time}',
-                    'dennismthairu@gmail.com',
+                    sender_email,
                     [patient.email],
                     fail_silently=False,
                 )

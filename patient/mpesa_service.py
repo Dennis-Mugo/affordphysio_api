@@ -49,6 +49,27 @@ def register_url():
     
     print(res.json())
 
+def check_transaction_status(checkout_request_id):
+    access_token = get_sandbox_token()
+    url = "https://sandbox.safaricom.co.ke/mpesa/stkpushquery/v1/query"
+    headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {access_token}"}
+    timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+    password = f"{short_code}{passkey}{timestamp}"
+    password = encodeb64(password)
+    payload = {    
+        "BusinessShortCode":short_code,    
+        "Password": password,    
+        "Timestamp": timestamp,    
+        "CheckoutRequestID": checkout_request_id,    
+    }
+
+    res = requests.post(url, json=payload, headers=headers)
+    res = res.json()
+    return res
+
+
+
 def send_stk_push(phone_number, amount, account_reference="Afford Physio"):
     access_token = get_sandbox_token()
     print(access_token)
@@ -100,6 +121,9 @@ failure = {
         }
     }
 }
+
+
+
 
 
 success = {

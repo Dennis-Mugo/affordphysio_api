@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 
 from app_physio.service import calculate_review_stats
-from patient.mpesa_service import send_stk_push
+from patient.mpesa_service import check_transaction_status, send_stk_push
 from .models import MPesaPayment, Patient, PatientFeedback, Appointment, PatientLocation, Payment
 from app_admin.models import EmailToken, EducationResource, ServiceProvided
 from app_physio.models import PhysioLocation, PhysioUser, PhysioSchedule
@@ -938,8 +938,34 @@ def check_payment_status(request):
         "status": 200
     }
     try:
+        
         payment_id = request.data["paymentId"]
         payment = get_object_or_404(MPesaPayment, id=payment_id)
+
+        obj = check_transaction_status(payment.checkout_id)
+        # print(obj)
+        if obj.get("errorMessage", False):
+            if obj["errorMessage"] == "The transaction is being processed":
+                serializer = MPesaPaymentSerializer(payment)
+                res["data"] = serializer.data
+                return Response(res, status=status.HTTP_200_OK)    
+
+        result_code = obj["ResultCode"]
+        result_desc = obj["ResultDesc"]
+
+        if result_code == '0':
+            # payment = get_object_or_404(MPesaPayment, request_id=request_id, checkout_id=checkout_id)
+            payment.status = "completed"
+            payment.status_message = result_desc
+            payment.save()
+           
+        
+        else:
+            # payment = get_object_or_404(MPesaPayment, request_id=request_id, checkout_id=checkout_id)
+            payment.status = "failed"
+            payment.status_message = obj["ResultDesc"]
+            payment.save()
+
         serializer = MPesaPaymentSerializer(payment)
         res["data"] = serializer.data
         return Response(res, status=status.HTTP_200_OK)

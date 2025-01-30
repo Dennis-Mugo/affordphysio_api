@@ -2,6 +2,7 @@ import base64
 import requests
 from dotenv import load_dotenv
 import os
+import json
 load_dotenv()
 import datetime
 
@@ -108,6 +109,9 @@ def send_stk_push(phone_number, amount, account_reference="Afford Physio"):
 # register_url()
 # get_access_token()
 # get_sandbox_token()
+
+# s = check_transaction_status("ws_CO_30012025083908894717811921")
+# print(json.dumps(s, indent=4))
 
 
 

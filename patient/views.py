@@ -657,14 +657,7 @@ def add_payment(request):
         return Response(serializer.data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(["POST"])
-def get_payments(request):
-    patient_id = request.data.get("patientId", False)
-    if not patient_id:
-        return Response({"detail": "PatientId is missing"}, status=status.HTTP_400_BAD_REQUEST)
-    payments = Payment.objects.filter(patient=patient_id)
-    serializer = PaymentSerializer(payments, many=True)
-    return Response(serializer.data, status.HTTP_200_OK)
+
 
 @api_view(["GET"])
 def get_available_physios(request):
@@ -969,6 +962,26 @@ def check_payment_status(request):
         serializer = MPesaPaymentSerializer(payment)
         res["data"] = serializer.data
         return Response(res, status=status.HTTP_200_OK)
+    except Exception as e:
+        res["errors"].append(str(e))
+        res["status"] = 500
+        return Response(res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(["POST"])
+def get_payments(request):
+    res = {
+        "data": {},
+        "errors": [],
+        "status": 200
+    }
+    try:
+        patient_id = request.data["patientId"]
+        payments = MPesaPayment.objects.filter(patient=patient_id)
+        serializer = MPesaPaymentSerializer(payments, many=True)
+        res["data"] = serializer.data
+        res["status"] = 200
+        return Response(res, status=status.HTTP_200_OK)
+
     except Exception as e:
         res["errors"].append(str(e))
         res["status"] = 500

@@ -48,15 +48,8 @@ def signup_verify(request):
         is_resend = request.data.get("isResend", False)
         email = request.data["email"]
 
-        user = PhysioUser.objects.filter(email=email)
-        if user.exists():
-            res["errors"].append("A user with that email already exists.")
-            res["status"] = 400
-            return Response(res, status=status.HTTP_400_BAD_REQUEST)
-        
-        
-
         verify_link = get_email_verification_link(email)
+        
         if is_resend:
             #User data is saved but user wants to resend verification email
             send_mail(
@@ -69,6 +62,17 @@ def signup_verify(request):
             res["data"] = {"success": True}
             res["errors"] = []
             return Response(res, status=status.HTTP_200_OK)
+
+        user = PhysioUser.objects.filter(email=email)
+        if user.exists():
+            res["errors"].append("A user with that email already exists.")
+            res["status"] = 400
+            return Response(res, status=status.HTTP_400_BAD_REQUEST)
+        
+        
+
+        
+        
         
 
         # data = request.data | {"username": request.data["first_name"] + request.data["last_name"], "password": "amref"}

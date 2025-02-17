@@ -14,7 +14,7 @@ def get_email_verification_link(email):
     if serializer.is_valid():
         serializer.save()
         token_id = serializer.data["id"]
-        return f"http://localhost:5173/physiotherapist/register/{email}/{token_id}"
+        return f"http://localhost:5173/physio/register/{email}/{token_id}"
 
 
 def add_physio_log(activity, physio):

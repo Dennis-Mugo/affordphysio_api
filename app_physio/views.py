@@ -712,6 +712,7 @@ def reschedule_appointment(request):
             (data["startTime"]["minute"] * 60))
             request.data["end_time"] = datetime.time(hour=data["endTime"]["hour"], minute=data["endTime"]["minute"])
             request.data["status"] = "accepted"
+            request.data["appointment_type"] = data["appointmentType"]
             serializer = AppointmentSerializer(appointment, data=request.data, partial=True)
             if serializer.is_valid():
                 serializer.save()

@@ -35,5 +35,7 @@ urlpatterns = [
     path("save_physio_location", views.add_physio_location),
     path("get_patient_locations", views.get_patient_locations),
     # path("appointments", views.appointments),
+
+    path("add_video_recommendation", views.add_video_recommendation),
 ]
 

@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 import uuid
 
 
+
 # Create your models here.
 class PhysioUser(User):
     gender = models.CharField(max_length=50, null=True)
@@ -10,7 +11,7 @@ class PhysioUser(User):
     date_of_birth = models.DateTimeField(null=True)
     phone_number = models.CharField(max_length=50, null=True)
     education = models.TextField(null=True)
-    years_of_experience = models.TextField(null=True)
+    years_of_experience = models.TextField(null=True) 
     specialty = models.TextField(null=True)
     pck_number = models.IntegerField(null=True)
     clinic = models.CharField(max_length=50, null=True)
@@ -63,3 +64,4 @@ class PhysioLocation(models.Model):
 
     def __str__(self):
         return "Latitude: " + str(self.latitude) + ", Longitude: " + str(self.longitude)
+    

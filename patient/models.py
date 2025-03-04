@@ -70,7 +70,7 @@ class Appointment(models.Model):
     modified_date = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.patient.first_name + " " + self.status
+        return str(self.id) + " " + self.patient.first_name + " " + self.status
 
 class Penalty(models.Model):
     penalty_type = models.CharField(null=True, max_length=50)
@@ -116,6 +116,18 @@ class PatientLocation(models.Model):
 
     def __str__(self):
         return "Latitude: " + str(self.latitude) + ", Longitude: " + str(self.longitude)
+    
+
+class VideoRecommendation(models.Model):
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
+    physio = models.ForeignKey(PhysioUser, on_delete=models.CASCADE)
+    appointment= models.ForeignKey(Appointment, on_delete=models.CASCADE)
+    video_url = models.TextField(null=False)
+    category = models.CharField(max_length=50, null=True)
+    date_created = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.category + " " + self.video_url[:10]
 
 
 

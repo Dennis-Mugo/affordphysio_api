@@ -2,7 +2,7 @@ from django.http import JsonResponse
 from .models import PhysioLocation, PhysioUser, PhysioSchedule, PostVisit
 from app_admin.models import EmailToken
 from patient.models import Appointment, PatientFeedback, Patient, PatientLocation
-from patient.serializers import AppointmentSerializer, PatientFeedbackSerializer, AppointmentCancellationSerializer, PatientLocationSerializer, PatientSerializer
+from patient.serializers import AppointmentSerializer, PatientFeedbackSerializer, AppointmentCancellationSerializer, PatientLocationSerializer, PatientSerializer, VideoRecommendationSerializer
 from app_admin.serializers import EmailTokenSerializer
 from .serializers import PhysioLocationSerializer, PhysioUserSerializer, PhysioScheduleSerializer, PostVisitSerializer
 from app_admin.service import get_password_reset_link_physio
@@ -873,3 +873,47 @@ def add_physio_location(request):
         res["errors"].append(str(e))
         res["status"] = 500
         return Response(res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+
+@api_view(["POST"])
+def add_video_recommendation(request):
+    res = {
+        "data": {},
+        "errors": [],
+        "status": 200
+    }
+
+    try:
+        data = request.data
+        urlObjs = request.data["videoList"]
+        for obj in urlObjs:
+            
+            record = {
+                'physio': data['physioId'],
+                'patient': data['patientId'],
+                'appointment': data['appointmentId'],
+                'video_url': obj["url"],
+                'category': obj['category']
+            }
+        
+            serializer = VideoRecommendationSerializer(data=record)
+            if serializer.is_valid():
+                serializer.save()
+                
+            else:
+                res["errors"] += [err for lst in serializer.errors.values() for err in lst]
+                res["status"] = 400
+                return Response(res, status=status.HTTP_400_BAD_REQUEST)
+
+        res["data"] = {"success": True}
+        return Response(res, status=status.HTTP_201_CREATED)
+        
+        
+    
+    except Exception as e:
+        res["errors"].append(str(e))
+        res["status"] = 500
+        return Response(res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+

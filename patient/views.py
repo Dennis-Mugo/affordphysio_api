@@ -986,3 +986,7 @@ def get_payments(request):
         res["errors"].append(str(e))
         res["status"] = 500
         return Response(res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+
+
+

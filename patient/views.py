@@ -2,12 +2,12 @@ from django.http import JsonResponse
 
 from app_physio.service import calculate_review_stats
 from patient.mpesa_service import check_transaction_status, send_stk_push
-from .models import MPesaPayment, Patient, PatientFeedback, Appointment, PatientLocation, Payment
+from .models import MPesaPayment, Patient, PatientFeedback, Appointment, PatientLocation, Payment, VideoRecommendation
 from app_admin.models import EmailToken, EducationResource, ServiceProvided
 from app_physio.models import PhysioLocation, PhysioUser, PhysioSchedule
 from app_physio.serializers import PhysioLocationSerializer, PhysioUserSerializer, PhysioScheduleSerializer
 from app_admin.serializers import EmailTokenSerializer, EdResourceSerializer, ServiceSerializer
-from .serializers import MPesaPaymentSerializer, PatientLocationSerializer, PatientSerializer, PatientFeedbackSerializer, AppointmentSerializer, AppointmentCancellationSerializer, PenaltySerializer, PaymentSerializer
+from .serializers import MPesaPaymentSerializer, PatientLocationSerializer, PatientSerializer, PatientFeedbackSerializer, AppointmentSerializer, AppointmentCancellationSerializer, PenaltySerializer, PaymentSerializer, VideoRecommendationSerializer
 from .service import get_email_verification_link, get_password_reset_link, add_patient_log, get_physio_detail_feedback, get_physios_from_ids
 
 from rest_framework.response import Response
@@ -484,7 +484,9 @@ def get_upcoming_appointments(request):
     try:
         patient = get_object_or_404(Patient, id=request.data["patientId"])
         #Check if appointment status=accepted and is in the future
-        appointments = Appointment.objects.filter(patient=patient, timestamp__gte=datetime.datetime.now(), status="accepted")
+        appointments = Appointment.objects.filter(patient=patient, 
+                                                  timestamp__gte=datetime.datetime.now(), 
+                                                  status="accepted")
         serializer = AppointmentSerializer(appointments, many=True)
         data = get_physio_detail_feedback(serializer.data)
         res["data"] = data
@@ -981,6 +983,32 @@ def get_payments(request):
         res["data"] = serializer.data
         res["status"] = 200
         return Response(res, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        res["errors"].append(str(e))
+        res["status"] = 500
+        return Response(res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+
+@api_view(["POST"])
+def get_video_recommendations(request):
+    res = {
+        "data": {},
+        "errors": [],
+        "status": 200
+    }
+
+    #Get video recommendation for a certain appointment
+    try:
+        appointment_id = request.data["appointmentId"]
+        videos = VideoRecommendation.objects.filter(appointment=appointment_id)
+        serializer = VideoRecommendationSerializer(videos, many=True)
+        res["data"] = serializer.data
+        res["status"] = 200
+        return Response(res, status=status.HTTP_200_OK)
+        
+
+
 
     except Exception as e:
         res["errors"].append(str(e))

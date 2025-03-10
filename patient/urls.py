@@ -39,6 +39,8 @@ urlpatterns = [
     path("validate_payment", views.validate_payment),
     path("confirm_payment", views.confirm_payment),
 
+    path("get_video_recommendations", views.get_video_recommendations),
+
     
 
 

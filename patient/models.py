@@ -124,10 +124,13 @@ class VideoRecommendation(models.Model):
     appointment= models.ForeignKey(Appointment, on_delete=models.CASCADE)
     video_url = models.TextField(null=False)
     category = models.CharField(max_length=50, null=True)
+    is_done = models.BooleanField(default=False)
+    patient_comments = models.TextField(null=True, default="")
     date_created = models.DateTimeField(auto_now_add=True)
+    date_updated = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.category + " " + self.video_url[:10]
+        return self.category + " " + self.video_url[:10] + "id: " + str(self.id)
 
 
 

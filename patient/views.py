@@ -1016,5 +1016,34 @@ def get_video_recommendations(request):
         return Response(res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
 
+@api_view(["PATCH"])
+def update_video_recommendation(request):
+    res = {
+        "data": {},
+        "errors": [],
+        "status": 200
+    }
+    try:
+        data = request.data
+        video_id = data["videoId"]
+        
+        video = get_object_or_404(VideoRecommendation, id=video_id)
+        serializer = VideoRecommendationSerializer(video, data=data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            res["data"] = serializer.data
+            res["status"] = 200
+            return Response(res, status=status.HTTP_200_OK)
+        
+        res["errors"] += [err for lst in serializer.errors.values() for err in lst]
+        res["status"] = 400
+        return Response(res, status=status.HTTP_400_BAD_REQUEST)
+
+    except Exception as e:
+        res["errors"].append(str(e))
+        res["status"] = 500
+        return Response(res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+
 
 

@@ -47,11 +47,11 @@ class PhysioSchedule(models.Model):
 class PostVisit(models.Model):
     patient = models.IntegerField(null=False)
     physio = models.ForeignKey(PhysioUser, on_delete=models.CASCADE)
-    treatment_plan = models.TextField(null=False)
-    recommendations = models.TextField(null=False)
-    follow_up_date = models.DateField(null=False)
-    pain_management = models.TextField(null=False)
-    feedback = models.TextField(null=False)
+    treatment_plan = models.TextField(null=True)
+    recommendations = models.TextField(null=True)
+    follow_up_date = models.DateField(null=True)
+    pain_management = models.TextField(null=True)
+    feedback = models.TextField(null=True)
     date_created = models.DateTimeField(auto_now_add=True)
 
 

@@ -760,7 +760,8 @@ def add_post_visit(request):
         data = request.data
         patient = get_object_or_404(Patient, email=data["patientEmail"])
         physio = get_object_or_404(PhysioUser, id=data["physioId"])
-        data["follow_up_date"] = datetime.date.fromtimestamp(data["followUpDate"])
+        if data.get("followUpDate", False):
+            data["follow_up_date"] = datetime.date.fromtimestamp(data["followUpDate"])
         data["treatment_plan"] = data["treatmentPlan"]
         data["pain_management"] = data["painManagement"]
         data["physio"] = physio

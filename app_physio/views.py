@@ -1,8 +1,10 @@
 from django.http import JsonResponse
+
+from patient.mpesa_service import check_transaction_status, send_stk_push
 from .models import PhysioLocation, PhysioUser, PhysioSchedule, PostVisit
 from app_admin.models import EmailToken
-from patient.models import Appointment, PatientFeedback, Patient, PatientLocation
-from patient.serializers import AppointmentSerializer, PatientFeedbackSerializer, AppointmentCancellationSerializer, PatientLocationSerializer, PatientSerializer, VideoRecommendationSerializer
+from patient.models import Appointment, MPesaPayment, PatientFeedback, Patient, PatientLocation
+from patient.serializers import AppointmentSerializer, MPesaPaymentSerializer, PatientFeedbackSerializer, AppointmentCancellationSerializer, PatientLocationSerializer, PatientSerializer, VideoRecommendationSerializer
 from app_admin.serializers import EmailTokenSerializer
 from .serializers import PhysioLocationSerializer, PhysioUserSerializer, PhysioScheduleSerializer, PostVisitSerializer
 from app_admin.service import get_password_reset_link_physio
@@ -917,4 +919,98 @@ def add_video_recommendation(request):
         return Response(res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+@api_view(["POST"])
+def send_prompt(request):
+    res = {
+        "data": {},
+        "errors": [],
+        "status": 200
+    }
+    try:
+        phone_number = request.data["phoneNumber"]
+        appointment_id = request.data["appointmentId"]
+        appointment = get_object_or_404(Appointment, id=appointment_id)
+        patient_id = appointment.patient.id
+        
+        amount = int(request.data["amount"])
+        promptResult = send_stk_push(phone_number, amount)
+        if promptResult.get("errorMessage", False):
+            res["status"] = 400
+            res["errors"].append(promptResult["errorMessage"])
+            return Response(res, status=status.HTTP_400_BAD_REQUEST)
+        
+        if promptResult.get("ResponseDescription", False):
+            obj = {
+                "request_id": promptResult["MerchantRequestID"],
+                "checkout_id": promptResult["CheckoutRequestID"],
+                "amount": amount,
+                "phone_number": phone_number,
+                "appointment": appointment_id,
+                "patient": patient_id,
+                "status": "pending"
+            }
+            serializer = MPesaPaymentSerializer(data=obj)
+            if serializer.is_valid():
+                serializer.save()
+            else:
+                res["status"] = 400
+                res["errors"] += [err for lst in serializer.errors.values() for err in lst]
+                return Response(res, status=status.HTTP_400_BAD_REQUEST)
+            
+            res["status"] = 200
+            res["data"] = {**promptResult, "paymentId": serializer.data["id"]}
+            return Response(res, status=status.HTTP_200_OK)
+        
+        res["status"] = 500
+        res["errors"].append(promptResult)
+        return Response(res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    except Exception as e:
+        res["errors"].append(str(e))
+        res["status"] = 500
+        return Response(res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+@api_view(["POST"])
+def check_payment_status(request):
+    res = {
+        "data": {},
+        "errors": [],
+        "status": 200
+    }
+    try:
+        
+        payment_id = request.data["paymentId"]
+        payment = get_object_or_404(MPesaPayment, id=payment_id)
+
+        obj = check_transaction_status(payment.checkout_id)
+        # print(obj)
+        if obj.get("errorMessage", False):
+            if obj["errorMessage"] == "The transaction is being processed":
+                serializer = MPesaPaymentSerializer(payment)
+                res["data"] = serializer.data
+                return Response(res, status=status.HTTP_200_OK)    
+
+        result_code = obj["ResultCode"]
+        result_desc = obj["ResultDesc"]
+
+        if result_code == '0':
+            # payment = get_object_or_404(MPesaPayment, request_id=request_id, checkout_id=checkout_id)
+            payment.status = "completed"
+            payment.status_message = result_desc
+            payment.save()
+           
+        
+        else:
+            # payment = get_object_or_404(MPesaPayment, request_id=request_id, checkout_id=checkout_id)
+            payment.status = "failed"
+            payment.status_message = obj["ResultDesc"]
+            payment.save()
+
+        serializer = MPesaPaymentSerializer(payment)
+        res["data"] = serializer.data
+        return Response(res, status=status.HTTP_200_OK)
+    except Exception as e:
+        res["errors"].append(str(e))
+        res["status"] = 500
+        return Response(res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

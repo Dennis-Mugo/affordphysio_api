@@ -92,6 +92,7 @@ class Payment(models.Model):
 
 class MPesaPayment(models.Model):
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
+    appointment = models.ForeignKey(Appointment, on_delete=models.CASCADE)
     amount = models.FloatField(null=True)
     phone_number = models.CharField(max_length=15, null=True)
     date_created = models.DateTimeField(auto_now_add=True)

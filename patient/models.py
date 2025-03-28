@@ -132,6 +132,20 @@ class VideoRecommendation(models.Model):
 
     def __str__(self):
         return self.category + " " + self.video_url[:10] + "id: " + str(self.id)
+    
+
+class PatientSymptom(models.Model):
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
+    physio = models.ForeignKey(PhysioUser, on_delete=models.CASCADE)
+    symptoms = models.TextField(null=True)
+    duration = models.CharField(max_length=100, null=True)
+    type_of_pain = models.CharField(max_length=100, null=True)
+    pain_intensity = models.CharField(max_length=100, null=True)
+    date_created = models.DateTimeField(auto_now_add=True)
+    date_updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.symptoms[:10] + " " + self.duration + " " + self.type_of_pain + " " + self.pain_intensity
 
 
 

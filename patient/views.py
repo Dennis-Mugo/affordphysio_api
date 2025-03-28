@@ -7,7 +7,7 @@ from app_admin.models import EmailToken, EducationResource, ServiceProvided
 from app_physio.models import PhysioLocation, PhysioUser, PhysioSchedule
 from app_physio.serializers import PhysioLocationSerializer, PhysioUserSerializer, PhysioScheduleSerializer
 from app_admin.serializers import EmailTokenSerializer, EdResourceSerializer, ServiceSerializer
-from .serializers import MPesaPaymentSerializer, PatientLocationSerializer, PatientSerializer, PatientFeedbackSerializer, AppointmentSerializer, AppointmentCancellationSerializer, PenaltySerializer, PaymentSerializer, VideoRecommendationSerializer
+from .serializers import MPesaPaymentSerializer, PatientLocationSerializer, PatientSerializer, PatientFeedbackSerializer, AppointmentSerializer, AppointmentCancellationSerializer, PatientSymptomSerializer, PenaltySerializer, PaymentSerializer, VideoRecommendationSerializer
 from .service import get_email_verification_link, get_password_reset_link, add_patient_log, get_physio_detail_feedback, get_physios_from_ids
 
 from rest_framework.response import Response
@@ -1045,5 +1045,61 @@ def update_video_recommendation(request):
         return Response(res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
 
+@api_view(["POST"])
+def add_symptoms(request):
+    res = {
+        "data": {},
+        "errors": [],
+        "status": 200
+    }
+
+    try:
+        data = request.data
+        patient = get_object_or_404(Patient, id=data["patientId"])
+        physio_id_list = data["physioIds"]
+
+        for physio_id in physio_id_list:
+            physio = get_object_or_404(PhysioUser, id=physio_id)
+            obj = {
+                "patient": patient,
+                "physio": physio,
+                "symptoms": data["symptoms"],
+                "duration": data["duration"],
+                "type_of_pain": data["typeOfPain"],
+                "pain_intensity": str(data["painIntensity"])
+            }
+            serializer = PatientSymptomSerializer(data=obj)
+            if serializer.is_valid():
+                serializer.save()
+            else:
+                res["errors"] += [err for lst in serializer.errors.values() for err in lst]
+                res["status"] = 400
+                return Response(res, status=status.HTTP_400_BAD_REQUEST)
+            
+        res["status"] = 201
+        res["data"] = {"success": True}
+        return Response(res, status=status.HTTP_201_CREATED)
 
 
+    except Exception as e:
+        res["errors"].append(str(e))
+        res["status"] = 500
+        return Response(res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(["GET"])
+def get_physio_list(request):
+    res = {
+        "data": {},
+        "errors": [],
+        "status": 200
+    }
+    try:
+        physios = PhysioUser.objects.all()
+        serializer = PhysioUserSerializer(physios, many=True)
+        res["data"] = serializer.data
+        return Response(res, status=status.HTTP_200_OK)
+    except Exception as e:
+        res["errors"].append(str(e))
+        res["status"] = 500
+        return Response(res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

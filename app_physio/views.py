@@ -3,8 +3,8 @@ from django.http import JsonResponse
 from patient.mpesa_service import check_transaction_status, send_stk_push
 from .models import PhysioLocation, PhysioUser, PhysioSchedule, PostVisit
 from app_admin.models import EmailToken
-from patient.models import Appointment, MPesaPayment, PatientFeedback, Patient, PatientLocation
-from patient.serializers import AppointmentSerializer, MPesaPaymentSerializer, PatientFeedbackSerializer, AppointmentCancellationSerializer, PatientLocationSerializer, PatientSerializer, VideoRecommendationSerializer
+from patient.models import Appointment, MPesaPayment, PatientFeedback, Patient, PatientLocation, PatientSymptom
+from patient.serializers import AppointmentSerializer, MPesaPaymentSerializer, PatientFeedbackSerializer, AppointmentCancellationSerializer, PatientLocationSerializer, PatientSerializer, PatientSymptomSerializer, VideoRecommendationSerializer
 from app_admin.serializers import EmailTokenSerializer
 from .serializers import PhysioLocationSerializer, PhysioUserSerializer, PhysioScheduleSerializer, PostVisitSerializer
 from app_admin.service import get_password_reset_link_physio
@@ -1014,3 +1014,30 @@ def check_payment_status(request):
         res["status"] = 500
         return Response(res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
+@api_view(["POST"])
+def get_symptoms(request):
+    res = {
+        "data": {},
+        "errors": [],
+        "status": 200
+    }
+    try:
+        data = request.data
+        physioId = data["physioId"]
+        #get all symptoms for the physio
+        symptoms = PatientSymptom.objects.filter(physio=physioId)
+        serializer = PatientSymptomSerializer(symptoms, many=True)
+        #for each symptom replace patient with patient details
+        for symptom in serializer.data:
+            patient = get_object_or_404(Patient, id=symptom["patient"])
+            patient_serializer = PatientSerializer(patient)
+            symptom["patient"] = patient_serializer.data
+
+        res["data"] = serializer.data
+        return Response(res, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        res["errors"].append(str(e))
+        res["status"] = 500
+        return Response(res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

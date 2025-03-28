@@ -39,5 +39,7 @@ urlpatterns = [
     path("add_video_recommendation", views.add_video_recommendation),
     path("send_mpesa_prompt", views.send_prompt),
     path("check_payment_status", views.check_payment_status),
+
+    path("get_patient_symptoms", views.get_symptoms),
 ]
 

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import MPesaPayment, Patient, PatientLocation, PatientLog, PatientFeedback, Appointment, AppointmentCancellation, Penalty, Payment, VideoRecommendation
+from .models import MPesaPayment, Patient, PatientLocation, PatientLog, PatientFeedback, Appointment, AppointmentCancellation, PatientSymptom, Penalty, Payment, VideoRecommendation
 
 class PatientSerializer(serializers.ModelSerializer):
     class Meta:
@@ -56,4 +56,7 @@ class VideoRecommendationSerializer(serializers.ModelSerializer):
         model = VideoRecommendation
         exclude = []
 
-
+class PatientSymptomSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PatientSymptom
+        exclude = []

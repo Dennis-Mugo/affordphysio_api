@@ -42,6 +42,9 @@ urlpatterns = [
     path("get_video_recommendations", views.get_video_recommendations),
     path("update_video_recommendation", views.update_video_recommendation),
 
+    path("get_physio_list", views.get_physio_list),
+    path("add_symptoms", views.add_symptoms),
+
     
 
 
